@@ -1,0 +1,188 @@
+/* RESET GLOBAL */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* evita scroll global */
+}
+app-footer, footer.footer{
+  flex-shrink: 0;
+}
+/* CONTENEDOR PRINCIPAL */
+.layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+
+}
+
+/* Título del Home */
+.home-title {
+  /* width: 100%; */
+  text-align: center;
+  margin-bottom: 30px;
+
+
+
+}
+.main-title{
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  overflow: auto;
+}
+
+.main-home:not(.collapsed) {
+  margin-left: 800px; /* sidebar expandido */
+}
+.home-title h1 {
+  font-size: 3rem;
+  font-weight: 400;
+  font-family: "Boogaloo", sans-serif;
+}
+
+.home-title .work { color: #FDD26E; }
+.home-title .ops  { color: #00C1D4; }
+/* SIDEBAR */
+app-side-bar {
+  width: 220px;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+
+app-side-bar.collapsed {
+  width: 70px;
+}
+
+.main {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  overflow: auto;
+}
+
+.main:not(.collapsed) {
+  margin-left: 30px; /* sidebar expandido */
+}
+
+
+
+/* CONTENIDO INTERNO CENTRADO ABSOLUTO */
+.content {
+flex-grow: 1;
+  display: flex;
+  justify-content: center; /* horizontal */
+  align-items: center;     /* vertical */
+  overflow: auto;
+  padding: 20px;
+}
+
+/* GRID DE CARDS */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 30px;
+  width: 100%;
+  max-width: 1100px;
+  justify-items: center;
+}
+
+/* CARD CORPORATIVO */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 35px 20px;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  max-width: 260px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+
+.card-icon {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  color: #003865;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #003865;
+  font-weight: 600;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  app-side-bar {
+    width: 70px;
+  }
+}
+
+@media (max-width: 600px) {
+  app-side-bar {
+    width: 0;
+  }
+
+  .main {
+    margin-left: 0 !important;
+  }
+}
+
+
+
+
+
+
+-----------------------------
+
+
+
+
+
+  <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+         <div class="home-title">
+        <h1><span class="work">Portal work</span><span class="ops">Ops</span></h1>
+      </div>
+  </div>
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <!-- Contenedor principal -->
+  <div class="main" [class.collapsed]="isSidebarCollapsed">
+      <!-- Título -->
+    <!-- Contenedor de contenido vertical -->
+    <div class="content">
+      <!-- Grid de cards -->
+      <div class="cards-container">
+        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+          <i class="{{ card.icon }} card-icon"></i>
+          <h3>{{ card.label }}</h3>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+Trate de dejar el home fuera del layout para darle otras propiedades pero no funciona :c no se muebe hacia la derecha centrado cuando se abre el sidenav. lo ootro en lo que me fije es que el icono y el nombre de la card no están centrados
