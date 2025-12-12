@@ -1,0 +1,96 @@
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'home',
+  standalone: true,
+  imports: [CommonModule, SideBarComponent],
+  templateUrl: 'home.component.html',
+  styleUrls: ['home.component.css']
+})
+export class HomeComponent implements AfterViewInit {
+
+  @ViewChild(SideBarComponent) sidebar!: SideBarComponent;
+
+  isSidebarCollapsed = false;
+  menuItems: any[] = [];
+
+  constructor(private router: Router) {}
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.menuItems = this.sidebar.menuItems.filter(
+        x => x.label !== 'Cerrar Sesión'
+      );
+    });
+  }
+
+  onSidebarToggled(isCollapsed: boolean) {
+    this.isSidebarCollapsed = this.sidebar.isCollapsed;
+  }
+
+  goTo(route: string) {
+    this.router.navigate([route]);
+  }
+}
+
+
+
+-------------
+
+
+
+
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-side-bar',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './side-bar.html',
+  styleUrl: './side-bar.css',
+})
+export class SideBarComponent implements OnInit {
+
+  @Output() sidebarToggled = new EventEmitter<boolean>();
+
+  isCollapsed = false;
+  currentRoute = '';
+
+  // Exportable: Home podrá leerlos
+  menuItems = [
+    { label: 'Home', icon: 'fa-solid fa-house', link: '/home', exact: true },
+    { label: 'Configuración', icon: 'fa-solid fa-gear', link: '/config', exact: true },
+    { label: 'Mi perfil', icon: 'fa-solid fa-user', link: '/perfil', exact: true },
+    { label: 'Ayuda', icon: 'fa-solid fa-circle-question', link: '/ayuda', exact: true },
+    { label: 'Cerrar Sesión', icon: 'fa-solid fa-right-from-bracket', link: '/logout', exact: true }
+  ];
+
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    const savedState = localStorage.getItem('sidebar-collapsed');
+    this.isCollapsed = savedState === 'true';
+
+    this.sidebarToggled.emit(this.isCollapsed);
+
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => this.currentRoute = event.url);
+  }
+
+  toggleSidebar() {
+    this.isCollapsed = !this.isCollapsed;
+    this.sidebarToggled.emit(this.isCollapsed);
+    localStorage.setItem('sidebar-collapsed', this.isCollapsed.toString());
+  }
+
+  isActive(link: string, exact: boolean = false): boolean {
+    return exact ? this.currentRoute === link : this.currentRoute.startsWith(link);
+  }
+}
