@@ -1,62 +1,77 @@
+/* ============================================
+   RESET GLOBAL
+=============================================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* evita scroll externo */
+  font-family: Arial, sans-serif;
+}
+
+/* ============================================
+   LAYOUT GENERAL
+=============================================== */
 .layout {
   display: flex;
   height: 100vh;
+  width: 100%;
   overflow: hidden;
+  background-color: #f5f5f5;
 }
-html, body{
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-/* Sidebar fijo */
+
+/* ============================================
+   SIDEBAR
+=============================================== */
 app-side-bar {
   width: 220px;
-  transition: width 0.3s ease;
   flex-shrink: 0;
+  transition: width 0.3s ease;
 }
 
-/* app-side-bar.collapsed,
-app-side-bar:not(.open) {
-  width: 70px; /* colapsado
-} */
-
 app-side-bar.collapsed {
-  width: 70px;} /* colapsado
+  width: 70px;
+}
 
-/* Área principal */
+/* ============================================
+   ÁREA PRINCIPAL
+=============================================== */
 .main {
   flex-grow: 1;
-  transition: margin-left 0.3s ease;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow:auto;
+  justify-content: center;   /* centra horizontal */
+  align-items: center;       /* centra vertical */
+  overflow: auto;            /* permite scroll interno si es necesario */
   padding: 20px;
-
-
+  transition: margin-left 0.3s ease;
 }
 
 .main.collapsed {
-  margin-left: 70px;
+  margin-left: 0;
 }
 
-/* Contenido debajo del navbar */
+/* ============================================
+   CONTENIDO
+=============================================== */
 .content {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
+/* ============================================
+   CARDS
+=============================================== */
 .cards-container {
   width: 100%;
   max-width: 1100px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 30px;
-  justify-content: center;
-  align-items: center;
-
+  justify-items: center; /* centra cada card */
 }
 
-/* CARD ESTILO CORPORATIVO */
+/* CARD CORPORATIVA */
 .card {
   background: #ffffff;
   border-radius: 16px;
@@ -66,8 +81,8 @@ app-side-bar.collapsed {
   width: 100%;
   max-width: 260px;
 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
   transition: transform .25s ease, box-shadow .25s ease;
 }
 
@@ -89,19 +104,22 @@ app-side-bar.collapsed {
   font-weight: 600;
 }
 
-
+/* ============================================
+   RESPONSIVE
+=============================================== */
 @media (max-width: 900px) {
-
-   app-side-bar {
-    width: 70;
+  app-side-bar {
+    width: 70px;
   }
 }
 
 @media (max-width: 600px) {
-   app-side-bar {
+  app-side-bar {
     width: 0;
   }
+
   .main {
     margin-left: 0 !important;
+    padding: 15px;
   }
 }
