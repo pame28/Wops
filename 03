@@ -1,3 +1,34 @@
+<div class="layout">
+
+  <!-- SIDEBAR con binding del collapse -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="main" [class.collapsed]="isSidebarCollapsed">
+
+    <!-- CONTENIDO CENTRADO -->
+    <div class="content">
+      <div class="cards-container">
+        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+          <i class="{{ card.icon }} card-icon"></i>
+          <h3>{{ card.label }}</h3>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+-----
+
 
 import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -40,27 +71,17 @@ export class HomeComponent implements AfterViewInit {
 
 
 
-
-
-
-
-
-
-
-
--------------------------------
-
-
+-----
 
 /* RESET GLOBAL */
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: hidden; /* evita scroll global */
 }
 
-/* LAYOUT principal */
+/* CONTENEDOR PRINCIPAL */
 .layout {
   display: flex;
   height: 100vh;
@@ -80,54 +101,51 @@ app-side-bar.collapsed {
   width: 70px;
 }
 
-/* ÁREA PRINCIPAL */
+/* MAIN CONTENT QUE SE MUEVE */
 .main {
   flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  transition: margin-left .3s ease;
-  overflow: hidden; /* evita scroll */
-}
-
-/* NAVBAR */
-app-navbar {
-  height: 60px;
-  background: #1c1f26;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
-}
-
-/* CONTENIDO debajo del navbar */
-.content {
-  flex-grow: 1;
-  overflow: auto;
+  transition: margin-left 0.3s ease;
+  overflow: hidden;
   display: flex;
   justify-content: center;
-  align-items: center; /* centrado TOTAL */
-  padding: 0;
+  align-items: center;
 }
 
-/* CARDS GRID */
+.main.collapsed {
+  margin-left: -150px; /* compensación del tamaño reducido */
+}
+
+/* CONTENIDO INTERNO CENTRADO ABSOLUTO */
+.content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center; /* horizontal */
+  align-items: center;     /* vertical */
+  overflow: auto;
+}
+
+/* GRID DE CARDS */
 .cards-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 30px;
   width: 100%;
   max-width: 1100px;
-  padding: 10px;
+  padding: 20px;
+  justify-items: center;
 }
 
-/* CARD */
+/* CARD CORPORATIVO */
 .card {
   background: #fff;
   border-radius: 16px;
   padding: 35px 20px;
   text-align: center;
   cursor: pointer;
-  max-width: 260px;
+
   width: 100%;
+  max-width: 260px;
 
   border: 1px solid #e6e6e6;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -163,44 +181,10 @@ app-navbar {
   app-side-bar {
     width: 0;
   }
-  
+
   .main {
     margin-left: 0 !important;
   }
-}
-
-
-
-
-
-
-------
-<div class="layout">
-  <app-side-bar [class.collapsed]="isCollapsed"></app-side-bar>
-
-  <div class="main" [class.collapsed]="isCollapsed">
-    <app-navbar (toggleSidebar)="toggleSidebar()"></app-navbar>
-
-    <div class="content">
-      <div class="cards-container">
-        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
-          <i class="{{ card.icon }} card-icon"></i>
-          <h3>{{ card.label }}</h3>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
--------
-
-isCollapsed = false;
-
-toggleSidebar() {
-  this.isCollapsed = !this.isCollapsed;
 }
 
 
