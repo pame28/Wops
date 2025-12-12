@@ -1,0 +1,316 @@
+HTML 
+
+
+
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <!-- Logo y botón de toggle -->
+  <div class="sidebar-header">
+    <div class="logo" *ngIf="!isCollapsed">
+      <h2>
+        <span class="work">work</span><span class="ops">Ops</span>
+      </h2>
+    </div>
+    <button class="toggle-btn" (click)="toggleSidebar()">
+      <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+    </button>
+  </div>
+
+  <!-- Menú de navegación -->
+  <nav class="sidebar-menu">
+
+ <ul>
+      <li *ngFor="let item of menuItems">
+        <a
+          [routerLink]="item.link"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: item.exact === true }"
+        >
+          <i class="fas" [class]="item.icon"></i>
+          <span *ngIf="!isCollapsed" class="menu-label">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+
+  </nav>
+
+  <!-- Footer del sidebar (opcional) -->
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <p class="version">Versión 1.0</p>
+  </div>
+</aside>
+
+
+-------------------------
+
+TS
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Router, NavigationEnd, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
+
+@Component({
+  selector: 'app-side-bar',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './side-bar.html',
+  styleUrl: './side-bar.css',
+})
+
+export class SideBarComponent implements OnInit {
+  @Output() sidebarToggled = new EventEmitter<boolean>();
+
+  isCollapsed = false;
+  currentRoute = '';
+
+  // Menú básico - puedes modificarlo según tus rutas reales
+  menuItems = [
+    { label: 'Home', icon: 'fa-home', link: '/home', exact: true },
+    { label: 'Configuración', icon: 'fa-gear', link: '/',exact: true },
+    { label: 'Mi perfil', icon: 'fa-user', link: '/' ,exact: true},
+
+    { label: 'Ayuda', icon: 'fa-question-circle', link: '/',exact: true },
+    { label: 'Cerrar Sesión', icon: 'fa-solid fa-right-from-bracket', link: '/' ,exact: true}
+  ];
+
+  constructor(private router: Router) {}
+
+  ngOnInit() {
+    // Inicializar estado del sidebar
+    const savedState = localStorage.getItem('sidebar-collapsed');
+    if (savedState) {
+      this.isCollapsed = savedState === 'true';
+    }
+
+    // Escuchar cambios de ruta para marcar el item activo
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: any) => {
+        this.currentRoute = event.url;
+      });
+  }
+
+  toggleSidebar() {
+    this.isCollapsed = !this.isCollapsed;
+    this.sidebarToggled.emit(this.isCollapsed);
+    localStorage.setItem('sidebar-collapsed', this.isCollapsed.toString());
+  }
+
+  navigateTo(link: string) {
+    this.router.navigate([link]);
+  }
+
+  // Verificar si un item del menú está activo
+  isActive(link: string, exact: boolean = false): boolean {
+    if (exact) {
+      return this.currentRoute === link;
+    }
+    return this.currentRoute.startsWith(link);
+  }
+}
+
+
+
+------------
+CSS
+
+
+
+/* Estructura principal */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 250px;
+  /* background-color: #003865; */
+   background-color: #003865;
+  color: #FFFFFF;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;   /* centra horizontalmente */
+  align-items: center;       /* centra verticalmente */
+  min-height: 80px;
+  gap: 10px;
+}
+
+
+.logo h2 {
+  font-size: 3rem;
+  font-weight: bolder;
+  font-family: "Boogaloo", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  width: 100%;
+  text-align: center;
+}
+.logo {
+  display: flex;
+  justify-content: center; /* centra horizontal */
+  align-items: center;     /* centra vertical */
+}
+
+.work {
+    color: #FDD26E;
+}
+
+.ops {
+  color:#00C1D4;
+
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+}
+
+.toggle-btn:hover {
+  background-color: #00C1D4;
+}
+
+/* Menú */
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin: 5px 0;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+.sidebar-menu a:hover {
+  background-color: #00C1D4;
+
+}
+
+.sidebar-menu a.active-link {
+    background-color: #00C1D4;
+
+}
+
+.sidebar-menu i {
+  width: 24px;
+  text-align: center;
+  font-size: 1.1rem;
+  margin-right: 15px;
+}
+
+.sidebar.collapsed .menu-label {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-menu i {
+  margin-right: 0;
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+  color: #95a5a6;
+  text-align: center;
+}
+
+.version {
+  margin: 0;
+}
+
+/* Scrollbar personalizado */
+.sidebar-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: #3498db;
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+  }
+
+  .sidebar:not(.collapsed) {
+    width: 250px;
+  }
+}
+
+
+
+
+-------------------------
+
+HOME 
+
+<div class="layout">
+  <!-- Sidebar con su propia hamburguesa -->
+  <app-side-bar></app-side-bar>
+  <div class="main">
+
+  </div>
+</div>
+
+
+
+import { Component, ViewChild } from '@angular/core';
+import { NavbarComponent } from '../../shared/navbar/navbar.component';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'home',
+  imports: [SideBarComponent],
+  templateUrl: 'home.component.html'
+})
+
+export class HomeComponent {
+  isSidebarCollapsed = false;
+
+  onSidebarToggled(isCollapsed: boolean) {
+    this.isSidebarCollapsed = isCollapsed;
+
+  }
+}
+
+
