@@ -1,3 +1,57 @@
+
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'home',
+  standalone: true,
+  imports: [CommonModule, SideBarComponent],
+  templateUrl: 'home.component.html',
+  styleUrls: ['home.component.css']
+})
+export class HomeComponent implements AfterViewInit {
+
+  @ViewChild(SideBarComponent) sidebar!: SideBarComponent;
+
+  isSidebarCollapsed = false;
+  menuItems: any[] = [];
+
+  constructor(private router: Router) {}
+
+  ngAfterViewInit() {
+    setTimeout(() => {
+      this.menuItems = this.sidebar.menuItems.filter(
+        x => x.label !== 'Cerrar Sesión'
+      );
+    });
+  }
+
+  onSidebarToggled(isCollapsed: boolean) {
+    this.isSidebarCollapsed = isCollapsed;
+  }
+
+  goTo(route: string) {
+    this.router.navigate([route]);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+-------------------------------
+
+
+
 /* RESET GLOBAL */
 html, body {
   margin: 0;
