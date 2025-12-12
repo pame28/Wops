@@ -1,0 +1,116 @@
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <!-- Main -->
+  <div class="main" [class.collapsed]="isSidebarCollapsed">
+
+    <div class="content-wrapper">
+
+      <!-- TÍTULO -->
+      <h2 class="home-title">
+        <span class="work">work</span><span class="ops">Ops</span>
+      </h2>
+
+      <!-- CARDS -->
+      <div class="cards-container">
+        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+          <i class="{{ card.icon }} card-icon"></i>
+          <h3>{{ card.label }}</h3>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+-----------
+
+/* MAIN (se mueve con el sidenav) */
+.main {
+  flex-grow: 1;
+  height: 100%;
+  overflow: auto;
+  transition: margin-left 0.3s ease;
+  padding: 40px 20px;
+  margin-left: 220px; /* sidebar abierto */
+}
+
+.main.collapsed {
+  margin-left: 70px; /* sidebar cerrado */
+}
+
+/* Contenedor centrado que se mueve con el sidebar */
+.content-wrapper {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto; /* centra todo dentro del espacio disponible */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* TÍTULO centrado */
+.home-title {
+  font-size: 3rem;
+  font-family: "Boogaloo", sans-serif;
+  font-weight: 400;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.work { color: #FDD26E; }
+.ops  { color: #00C1D4; }
+
+/* Cards grid */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 30px;
+  width: 100%;
+  justify-items: center;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 35px 20px;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  max-width: 260px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+
+.card-icon {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  color: #003865;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #003865;
+  font-weight: 600;
+}
+
