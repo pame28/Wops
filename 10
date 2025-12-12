@@ -1,0 +1,55 @@
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <div class="content-wrapper">
+
+      <!-- Título que debe moverse con el sidebar -->
+      <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+        <div class="home-title">
+          <h1><span class="work">Portal work</span><span class="ops">Ops</span></h1>
+        </div>
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="main" [class.collapsed]="isSidebarCollapsed">
+        <div class="content">
+          <div class="cards-container">
+            <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+              <i class="{{ card.icon }} card-icon"></i>
+              <h3>{{ card.label }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+-------
+
+
+/* contenedor que une título + main */
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* Título centrado */
+.main-title {
+  display: flex;
+  justify-content: center;
+ 
+
+
