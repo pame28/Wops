@@ -1,0 +1,295 @@
+Ayuda a agregar una tabla para Areas muy bonita y estetica que se mire bien dinamica y profesional, que tenga los siguientes campos: id y Zona (quiero que el crear y el modificar se desplieguen en un modal)
+
+Yo ya tengo en mi archivo src>app>assets>config.json esto tiene mi archivo : {
+  "apiUrl": "https://mi url",
+  "publicKPem": "LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0NCk1JR2ZNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0R05BRENCaVFLQmdRREUrZ0l0dlFiYXp0S2tDYUlRb040ektCVVgNCm5XSXBxRmdlQWNKVnovb200RFVoaTBITXArRktwVWFuUWVaR2VHei9kT3VsbkFLNnNnbWgzM0NsTHd6NUZZcjUNClNkZVpvNlJFVmpNVjZzRGx3ekUwN1VydDcrS2hKTlpaMlVuT2t0cjBCSFNVMG5Dem5oT3A5QkZkMXczM2F6K1INCmJ4U2xuRS9HQk02QzUvT0drUUlEQVFBQg0KLS0tLS1FTkQgUFVCTElDIEtFWS0tLS0tDQo="
+}
+
+Necesito Que me permita realizar Get, GetId, Update, Delete, Crear. Los endpoinst para realizar eso son los sigueintes:
+
+GET: {{apiUrl}}/areas
+GETID: {{apiUrl}}/areas/{{id}}
+UPDATE:  {{apiUrl}}/areas/actualizar/{{id}}
+DELETE:  {{apiUrl}}/areas/eliminar/{{id}}
+POST:  {{apiUrl}}/areas/crear y en el body iria algo como esto:
+
+{
+    "nombre": "Tecnología-prb"
+}
+
+
+Cabe destacar que, para cada metodo es necesario un BearerToken en la autorizacion y este se obtiene al realizar el Login, me devuelve esto (ejemplo):
+
+{
+    "code": "200",
+    "success": true,
+    "message": "Ok",
+    "data": {
+        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0LWlkIjoiMzRiNTgyZDItNzI3Yi00ODFhLTkyNzItZTQwYWRlNzM5NjkyIiwidXNlcm5hbWUiOiJ1c3JfcHJ1Y2VydDExIiwicm9sZSI6IlVzdWFyaW8iLCJuYmYiOjE3NjU1NTM2ODQsImV4cCI6MTc2NTU1NDU4NCwiaWF0IjoxNzY1NTUzNjg0LCJpc3MiOiJhcGlwb3J0YWx3b3Jrb3BzLmJhbnBhaXMuaG4iLCJhdWQiOiJwb3J0YWx3b3Jrb3BzLmJhbnBhaXMuaG4ifQ.Jx9sTW7zSo2XMWuAFV8TWZVlx5G9hUvfm-g3nc-Ph7Y",
+        "type": "Bearer",
+        "user": {
+            "userName": "usr_prucert11",
+            "fullName": null
+        },
+        "expiresIn": 900
+    },
+    "errors": null
+}
+
+
+
+Yo hago el login, pero no se en que momento se guarda ese accessToken o si todavia no se guarda, te enviaré mis servicios de login:
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AppConfigService } from '../../../services/app-config.service';
+import * as forge from 'node-forge';
+
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+
+  private apiUrl: string;
+  private publicK: string;
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {
+    this.apiUrl = this.config.apiUrl;
+    this.publicK = this.config.publicKey;
+  }
+
+  login(Usuario: string, Contraseña: string): Observable<any> {
+    const publicKey = forge.pki.publicKeyFromPem(atob(this.config.publicKey));
+    const passEncryp = forge.util.encode64(publicKey.encrypt(Contraseña, 'RSA-OAEP', { md: forge.md.sha1.create() }));
+    const body = { Usuario, Contraseña: passEncryp };
+    return this.http.post<any>(`${this.apiUrl}/auth/login`, body);
+  }
+}
+
+
+
+
+
+
+// import { AuthStateService } from './Services/login-AuthState.services';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+import { AuthService } from './services/login.service';
+import { animate, style, transition, trigger } from '@angular/animations';
+// import { AuthDB } from './Services/login-AuthBd.service';
+
+@Component({
+  selector: 'app-login',
+  styleUrls: ['./login.component.css'],
+  imports: [ReactiveFormsModule, CommonModule],
+  templateUrl: './login.component.html',
+  animations: [
+    trigger('fadeOut', [
+      transition(':leave', [
+        animate('900ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' }))
+      ])
+    ])
+  ]
+})
+
+export class LoginComponent {
+  showLogin = true;
+  loginForm: FormGroup;
+  loading = false;
+  // private authDB = new AuthDB();
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    // private AuthStateService: AuthStateService,
+    private router: Router
+  ) {
+    this.loginForm = this.fb.group({
+      usuario: ['', Validators.required],
+      psw: ['', Validators.required]
+    });
+  }
+
+  // async ngOnInit() {
+  //   this.AuthStateService.clearSession();
+  // }
+
+  async loginPortal() {
+
+    if (this.loginForm.invalid) return;
+
+    this.loading = true;
+
+    Swal.fire({
+      title: 'Iniciando sesión...',
+
+      html: `
+            <style>
+              .spinner-ring {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100px;
+              }
+
+              .ring {
+                width: 45px;
+                height: 45px;
+                border: 5px solid #007bff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+              }
+
+              @keyframes spin {
+                to {
+                  transform: rotate(360deg);
+                }
+              }
+            </style>
+            <div class="spinner-ring">
+              <div class="ring"></div>
+            </div>
+            <p class="mt-3">Verificando credenciales...</p>
+          `,
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const usuario = this.loginForm.value.usuario;
+    const contraseña = this.loginForm.value.psw;;
+
+    this.authService.login(usuario, contraseña).subscribe({
+      next: async (response) => {
+        console.log(`Respuesta login: ${JSON.stringify(response.data)}`);
+
+        this.loading = false;
+        // Swal.close();
+        if (response.code === '200' && response.success) {
+          // await this.authDB.saveToken(response.data.accessToken);
+          // await this.authDB.saveUser(response.data.user)
+          // await this.authDB.saveLoggedIn(response.success)
+
+
+          Swal.update({
+            icon: 'success',
+            html: '',
+            title: '¡Sesión iniciada!',
+            text: 'Redirigiendo al portal...',
+            showConfirmButton: false
+          });
+          setTimeout(() => {
+            Swal.close();
+            this.router.navigate(['/home']);
+          }, 1500);
+          this.showLogin = false;
+
+          // this.router.navigate(['/home'],);
+          // setTimeout(() => {
+          //   this.router.navigate(['/home']);
+          //   Swal.close();
+          // }, 1000);
+          // Swal.fire('Logueo Exitoso', `Usuario: ${JSON.stringify(response.data.user.userName)}`, 'success');
+        } else {
+          Swal.close();
+          this.showErrorModal(response.errors?.mensaje || response.message || 'Error desconocido');
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        Swal.close();
+        const mensajeError = err?.error?.errors?.mensaje || err?.error?.message || 'Error de conexión con el servidor.';
+        this.showErrorModal(mensajeError);
+      }
+    });
+  }
+
+
+  showErrorModal(message: string) {
+    Swal.fire({
+      icon: 'error',
+      title: message,
+      text: 'Error de inicio de sesión',
+      confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'btn btn-primary'
+      },
+      buttonsStyling: false
+    });
+
+  }
+}
+
+
+
+Este es un servicio general:
+
+// src/app/services/app-config.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Injectable({ providedIn: 'root' })
+export class AppConfigService {
+  private config: any;
+  private publicKPem: any;
+
+  constructor(private http: HttpClient) { }
+
+  loadConfig(): Promise<void> {
+    return this.http.get('/assets/config.json')
+      .toPromise()
+      .then(config => {
+        this.config = config;
+      });
+  }
+
+  get apiUrl(): string {
+    return this.config?.apiUrl || '';
+  }
+
+  get publicKey(): string {
+    return this.config?.publicKPem || '';
+  }
+}
+
+
+
+
+
+---aqui es donde quiero que agregues la tabla y los botones correspondientes
+
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <div class="content-wrapper">
+
+      <!-- Título que debe moverse con el sidebar -->
+      <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+        <div class="home-title">
+          <h1><span class="work">Áreas</span><span class="ops"></span></h1>
+        </div>
+      </div>
+
+    <h1>Funciono</h1>
+  </div>
+
+</div>
+
+
+
+Dime paso a paso que tengo que hacer y deviuelveme archivos completos
+
+
