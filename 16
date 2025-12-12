@@ -1,0 +1,280 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AppConfigService } from '../../../../services/app-config.service';
+
+@Injectable({ providedIn: 'root' })
+export class AreasService {
+
+  private apiUrl = this.config.apiUrl;
+
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {}
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('access_token') || '';
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+  }
+
+  getAreas(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/areas`, { headers: this.getHeaders() });
+  }
+
+  getArea(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/areas/${id}`, { headers: this.getHeaders() });
+  }
+
+  crearArea(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/areas/crear`, data, { headers: this.getHeaders() });
+  }
+
+  actualizarArea(id: string, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/areas/actualizar/${id}`, data, { headers: this.getHeaders() });
+  }
+
+  eliminarArea(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/areas/eliminar/${id}`, { headers: this.getHeaders() });
+  }
+}
+
+
+
+
+
+-------
+
+import { Component, OnInit } from '@angular/core';
+import { AreasService } from './services/areas.service';
+import Swal from 'sweetalert2';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-areas',
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  isSidebarCollapsed = false;
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+  editMode = false;
+  currentId: string | null = null;
+
+  constructor(
+    private areasService: AreasService,
+    private fb: FormBuilder
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAreas();
+
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: (response) => {
+        this.areas = response.data || response; 
+      },
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    (document.getElementById('areaModal') as any).showModal();
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+
+    this.areaForm.patchValue({
+      nombre: area.nombre
+    });
+
+    (document.getElementById('areaModal') as any).showModal();
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const data = { nombre: this.areaForm.value.nombre };
+
+    if (this.editMode && this.currentId) {
+      this.areasService.actualizarArea(this.currentId, data).subscribe({
+        next: () => {
+          Swal.fire('Actualizado', 'El área fue actualizada', 'success');
+          this.loadAreas();
+        },
+        error: () => Swal.fire('Error', 'No se pudo actualizar', 'error')
+      });
+    } else {
+      this.areasService.crearArea(data).subscribe({
+        next: () => {
+          Swal.fire('Creado', 'El área fue creada', 'success');
+          this.loadAreas();
+        },
+        error: () => Swal.fire('Error', 'No se pudo crear', 'error')
+      });
+    }
+
+    (document.getElementById('areaModal') as any).close();
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada correctamente', 'success');
+            this.loadAreas();
+          },
+          error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
+        });
+      }
+    });
+  }
+}
+
+
+
+
+-------
+
+<div class="layout">
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <div class="content-wrapper">
+
+    <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+      <div class="home-title">
+        <h1><span class="work">Áreas</span></h1>
+      </div>
+    </div>
+
+    <button class="btn-crear" (click)="openCreateModal()">➕ Crear Área</button>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Zona</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let area of areas">
+          <td>{{ area.id }}</td>
+          <td>{{ area.nombre }}</td>
+          <td>
+            <button class="btn-edit" (click)="openEditModal(area)">✏ Editar</button>
+            <button class="btn-delete" (click)="deleteArea(area.id)">🗑 Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<dialog id="areaModal" class="modal">
+  <h2>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h2>
+
+  <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+    <label>Zona:</label>
+    <input formControlName="nombre" type="text">
+
+    <div class="modal-buttons">
+      <button type="submit" class="btn-save">
+        {{ editMode ? 'Actualizar' : 'Crear' }}
+      </button>
+      <button type="button" class="btn-cancel" 
+              onclick="document.getElementById('areaModal').close()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</dialog>
+
+
+
+
+------
+
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tabla th {
+  background: #0056b3;
+  color: white;
+  padding: 12px;
+}
+
+.tabla td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-crear {
+  padding: 10px 15px;
+  background: #007bff;
+  border: none;
+  color: white;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.btn-edit {
+  background: #ffc107;
+  padding: 6px;
+  border: none;
+  border-radius: 5px;
+}
+
+.btn-delete {
+  background: #dc3545;
+  padding: 6px;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  margin-left: 5px;
+}
+
+.modal {
+  border: none;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+
+
+
