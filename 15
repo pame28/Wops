@@ -1,0 +1,148 @@
+
+Tengo problemas para redireccionar al componente de Areas, por el simple hecho de que es children, porque si lo hago como normalmente se hace me redirecciona bien
+
+este es mi html del componente padre Mantenimientos:
+
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <div class="content-wrapper">
+
+      <!-- Título que debe moverse con el sidebar -->
+      <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+        <div class="home-title">
+          <h1><span class="work">Mantenimientos</span><span class="ops"></span></h1>
+
+        </div>
+
+      </div>
+
+      <!-- Contenido principal -->
+      <div class="main" [class.collapsed]="isSidebarCollapsed">
+        <div class="content">
+          <div class="cards-container">
+            <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+              <i class="{{ card.icon }} card-icon"></i>
+              <h3>{{ card.label }}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+   <router-outlet></router-outlet>
+  </div>
+
+</div>
+
+este es el ts del componente padre mantenimientos:
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterOutlet } from '@angular/router';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-mantenimientos',
+  standalone: true,
+  imports: [CommonModule,SideBarComponent, RouterOutlet],
+  templateUrl: './mantenimientos.component.html',
+  styleUrl: './mantenimientos.component.css',
+})
+export class MantenimientosComponent{
+
+
+  isSidebarCollapsed = false;
+   menuItems = [
+    { label: 'Áreas', icon: 'fa-solid fa-sitemap', link: '/mantenimientos/areas', exact: true },
+    { label: 'Zonas', icon: 'fa-solid fa-map-location-dot', link: '/mantenimientos', exact: true },
+    { label: 'Usuarios ', icon: 'fa-solid fa-users', link: '/perfil', exact: true },
+    { label: 'Segunda opción ', icon: 'fa-solid fa-sliders', link: '/perfil', exact: true },
+    { label: 'Tercera opción ', icon: 'fa-solid fa-wrench', link: '/perfil', exact: true },
+
+  ];
+
+  constructor(private router: Router) {}
+
+
+
+  onSidebarToggled(isCollapsed: boolean) {
+    this.isSidebarCollapsed = isCollapsed;
+  }
+
+  goTo(route: string) {
+    this.router.navigate([route]);
+  }
+}
+
+
+
+
+
+Este es el html de la hija Areas
+<h1>funciona</h1>
+
+
+y este es el .ts de la hija
+
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-areas.component',
+  imports: [CommonModule,SideBarComponent],
+  templateUrl: './areas.component.html',
+  styleUrl: './areas.component.css',
+})
+export class AreasComponent {
+  isSidebarCollapsed = false;
+  onSidebarToggled(isCollapsed: boolean) {
+    this.isSidebarCollapsed = isCollapsed;
+  }
+
+
+}
+
+
+y este es mi app.routes.ts
+
+import { Routes } from '@angular/router';
+import { LoginComponent } from './features/login/login.component';
+import { HomeComponent } from './features/home/home.component';
+import { MantenimientosComponent } from './features/mantenimientos/mantenimientos.component';
+import { AreasComponent } from './features/areas/areas.component';
+
+export const routes: Routes = [
+
+  {
+    path: '',
+    component: LoginComponent,
+  },
+  {
+    path: 'home',
+    component: HomeComponent,
+  },
+
+ {
+    path: 'mantenimientos',
+    component: MantenimientosComponent,
+    children: [
+           {
+        path: 'areas',
+        component: AreasComponent
+      }
+    ]
+  },
+
+
+  {
+    path: '**',
+    redirectTo: '',
+  }
+
+];
+
