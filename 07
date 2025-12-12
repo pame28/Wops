@@ -9,7 +9,7 @@
   <!-- Contenedor principal -->
   <div class="main" [class.collapsed]="isSidebarCollapsed">
 
-    <!-- Contenido central -->
+    <!-- Contenedor de contenido vertical -->
     <div class="content">
 
       <!-- Título -->
@@ -35,25 +35,31 @@
 
 
 
--------
 
-/* Main dentro de Home */
+-----
+
 .main {
   flex-grow: 1;
   display: flex;
-  justify-content: center;    /* centra horizontal */
-  align-items: flex-start;    /* no empuja el footer */
   overflow: auto;
   padding: 20px;
   transition: margin-left 0.3s ease;
 }
 
-/* Ajuste según sidebar */
 .main.collapsed {
-  margin-left: 70px; /* cuando sidebar colapsa */
+  margin-left: 70px;
 }
+
 .main:not(.collapsed) {
-  margin-left: 220px; /* cuando sidebar está abierto */
+  margin-left: 220px;
+}
+
+/* Contenido vertical */
+.content {
+  display: flex;
+  flex-direction: column; /* IMPORTANTE: apila hijos verticalmente */
+  align-items: center;    /* centra horizontal */
+  width: 100%;
 }
 
 /* Título del Home */
@@ -68,21 +74,10 @@
   font-size: 3rem;
   font-weight: 400;
   font-family: "Boogaloo", sans-serif;
-  font-style: normal;
 }
 
-.home-title .work {
-  color: #FDD26E;
-}
-
-.home-title .ops {
-  color: #00C1D4;
-}
-
-/* Ajuste del título si sidebar está colapsado */
-.home-title.collapsed {
-  margin-left: 0; /* opcional si quieres que cambie algo */
-}
+.home-title .work { color: #FDD26E; }
+.home-title .ops  { color: #00C1D4; }
 
 /* Grid de cards */
 .cards-container {
