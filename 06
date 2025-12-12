@@ -1,0 +1,119 @@
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <!-- Contenedor principal -->
+  <div class="main" [class.collapsed]="isSidebarCollapsed">
+
+    <!-- Contenido central -->
+    <div class="content">
+      <div class="cards-container">
+        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+          <i class="{{ card.icon }} card-icon"></i>
+          <h3>{{ card.label }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>&copy; Tecnología - Banco del País</span>
+    </footer>
+
+  </div>
+
+</div>
+
+
+
+
+
+
+--------
+.layout {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Sidebar */
+app-side-bar {
+  width: 220px;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+app-side-bar.collapsed { width: 70px; }
+
+/* Main */
+.main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease;
+  overflow: hidden;
+}
+.main:not(.collapsed) { margin-left: 220px; }
+.main.collapsed { margin-left: 70px; }
+
+/* Contenido central */
+.content {
+  flex-grow: 1;               /* ocupa todo el espacio disponible */
+  display: flex;
+  justify-content: center;    /* centra horizontal */
+  align-items: flex-start;    /* contenido desde arriba */
+  padding: 40px 20px;
+  overflow: auto;             /* scroll si hay muchas cards */
+}
+
+/* Cards */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 30px;
+  width: 100%;
+  max-width: 1100px;
+  justify-items: center;
+}
+
+/* Card estilo corporativo */
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 35px 20px;
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  max-width: 260px;
+  border: 1px solid #e6e6e6;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+.card-icon { font-size: 3.5rem; margin-bottom: 15px; color: #003865; }
+.card h3 { margin: 0; font-size: 1.3rem; color: #003865; font-weight: 600; }
+
+/* Footer */
+.footer {
+  height: 50px;
+  flex-shrink: 0;            /* nunca se encoge */
+  background-color: #D9D9D9;
+  color: #909090;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 900px) { app-side-bar { width: 70px; } }
+@media (max-width: 600px) { app-side-bar { width: 0; } .main { margin-left: 0 !important; } }
+
