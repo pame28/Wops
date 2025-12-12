@@ -1,0 +1,39 @@
+// src/app/services/area.service.ts
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { AppConfigService } from './app-config.service';
+import { Observable } from 'rxjs';
+
+export interface Area {
+  id?: number | string;
+  nombre: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class AreaService {
+  private base: string;
+
+  constructor(private http: HttpClient, private cfg: AppConfigService) {
+    this.base = this.cfg.apiUrl;
+  }
+
+  getAll(): Observable<any> {
+    return this.http.get<any>(`${this.base}/areas`);
+  }
+
+  getById(id: string | number): Observable<any> {
+    return this.http.get<any>(`${this.base}/areas/${id}`);
+  }
+
+  create(area: Area): Observable<any> {
+    return this.http.post<any>(`${this.base}/areas/crear`, { nombre: area.nombre });
+  }
+
+  update(id: string | number, area: Area): Observable<any> {
+    return this.http.put<any>(`${this.base}/areas/actualizar/${id}`, { nombre: area.nombre });
+  }
+
+  delete(id: string | number): Observable<any> {
+    return this.http.delete<any>(`${this.base}/areas/eliminar/${id}`);
+  }
+}
