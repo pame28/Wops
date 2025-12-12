@@ -1,0 +1,62 @@
+Quiero agregar un titulo e igual que se ajuste cuando de despliegue el sidenav, ademas quiero que se vea igual que es h2 del sidenav 
+
+----ARCHIVO A MODIFICAR---
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <!-- Contenedor principal -->
+  <div class="main" [class.collapsed]="isSidebarCollapsed">
+
+    <!-- Contenido central -->
+    <div class="content">
+      <div class="cards-container">
+        <div class="card" *ngFor="let card of menuItems" (click)="goTo(card.link)">
+          <i class="{{ card.icon }} card-icon"></i>
+          <h3>{{ card.label }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+
+-------HTML SIDENAV--
+    <div class="logo" *ngIf="!isCollapsed">
+      <h2>
+        <span class="work">work</span><span class="ops">Ops</span>
+      </h2>
+    </div>
+
+
+
+----CSS SIDENAV----
+.logo h2 {
+  font-size: 3rem;
+  font-weight: bolder;
+  font-family: "Boogaloo", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  width: 100%;
+  text-align: center;
+}
+.logo {
+  display: flex;
+  justify-content: center; /* centra horizontal */
+  align-items: center;     /* centra vertical */
+}
+
+.work {
+    color: #FDD26E;
+}
+
+.ops {
+  color:#00C1D4;
+
+}
