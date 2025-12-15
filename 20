@@ -1,5 +1,5 @@
-Ya me funciona el get pero Ayudmae a arreglar el estilo de eso, porque se ve horrbkem como de kinder. Cuando presiono el boton que segun yo es para editar .. se me pone gris la pantalla como que intenta abrir el modal para actualizar, pero no funciona. Yo pienso que ese mismo modal debe utilizarse tanto para crear como para actualizar.. y solo se le cambia el titulo, pero actualmentr nada de eso funciona
-
+Ya me funciona el get y el eliminar., pero el create no y el update tampoco .. quizas me gustaria agregar una barra de busqueda ... como tipo filtro pero Ayudmae a arreglar el estilo de eso, porque se ve horrbkema como de kinder. Cuando presiono el boton que segun yo es para editar .. se me pone gris la pantalla como que intenta abrir el modal para actualizar, pero no funciona. Yo pienso que ese mismo modal debe utilizarse tanto para crear como para actualizar.. y solo se le cambia el titulo, pero actualmentr nada de eso funciona
+ar
 
 
 <div class="layout">
