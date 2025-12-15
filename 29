@@ -1,0 +1,270 @@
+Me gustaria agregar una x para cerrar la card, y además me gustaria que hubiese una pequeña validancion a nivel de frontend de que al darle crear o actualizar el campo no esté vacio si esta vacio .. que le muestre la validación en rojo .. 
+No cambies cosas de mi diseño actual
+
+
+<!-- LAYOUT -->
+   <div class="content-wrapper">
+
+      <!-- Título que debe moverse con el sidebar -->
+      <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+        <div class="home-title">
+          <h1><span class="work">Áreas</span><span class="ops"></span></h1>
+
+        </div>
+
+      </div>
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content" [class.collapsed]="isSidebarCollapsed">
+    <div class="card">
+      <div class="card-header">
+<h2></h2>
+        <div class="actions">
+          <input
+            type="text"
+            placeholder="Buscar..."
+            [(ngModel)]="searchText"
+          />
+
+          <button class="btn-primary" (click)="openCreateCard()">
+            + Nueva Área
+          </button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Área</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let area of filteredAreas()">
+            <td>{{ area.id }}</td>
+            <td>{{ area.nombre }}</td>
+            <td class="acciones-icon">
+              <button class="icon edit" (click)="openEditCard(area)" aria-label="Editar">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button class="icon delete" (click)="deleteArea(area.id)" aria-label="Eliminar">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  <!-- CARD QUE FUNCIONA COMO MODAL -->
+
+  <div class="card-backdrop" *ngIf="showCard">
+    <div class="card modal-card">
+      <h1 class="titulo-modal">{{ editMode ? 'Editar Área' : 'Nueva Área' }}</h1>
+
+      <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+        <label>Nombre Área</label>
+        <input type="text" formControlName="nombre" />
+        <div class="modal-actions">
+          <button class="btn-crear" type="submit">
+            {{ editMode ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button class="btn-outline" type="button" (click)="closeCard()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+
+
+/* LAYOUT */
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+  transition: margin-left .4s ease;
+}
+
+.content:not(.collapsed) {
+  margin-left: 220px;
+}
+
+/* CARD */
+.card {
+  max-width: 900px;  /* Se hace la tabla más ancha */
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  padding: 20px;
+}
+
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #00C1D4;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #FDD26E;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-outline {
+  border: 1px solid #ccc;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+  width: 150px;
+  font-weight: bolder;
+  font-size: 2opx;
+}
+
+.btn-crear {
+  background: #00C1D4;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  width: 150px;
+  font-weight: bolder;
+  font-size: 2opx;
+}
+.acciones-icon {
+  display: flex;
+  justify-content: center;  /* Centra los botones */
+  gap: 15px;  /* Agrega espacio entre los botones */
+}
+
+.icon {
+  border: none;
+  padding: 6px 7px;  /* Aumenta el tamaño de los iconos */
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 16px;  /* Aumenta el tamaño de los iconos */
+}
+
+.icon.edit { background: #003865; }
+.icon.delete { background: #dc3545; color: white; }
+
+
+/* Título centrado */
+.main-title {
+  display: flex;
+  justify-content: center;
+}
+
+.home-title h1 {
+  font-size: 4rem;
+  font-weight: 400;
+  font-family: "Boogaloo", sans-serif;
+  color: #003865;
+}
+
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+
+
+/* Card modal */
+.card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-card {
+  width: 500px;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  background: white;
+}
+
+.modal-card input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.titulo-modal{
+    color: #003865;
+    font-family: "Boogaloo", sans-serif;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+/* Títulos */
+.main-title {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.home-title h1 {
+  font-size: 3rem;
+  color: #003865;
+    font-family: "Boogaloo", sans-serif;
+}
+
+
+
+
