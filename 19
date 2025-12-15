@@ -1,0 +1,505 @@
+Ah si,creo que el problema es como estoy guardan el accessToken, te mueestro todos mis servicios, para que me ayudes a corregirlos y me des el codigo completo paso por paso.
+
+import Dexie from 'dexie';
+
+// auth-db.service.ts
+export class AuthDB extends Dexie {
+  accessToken!: Dexie.Table<{ id: string; value: string, expiresAt: number }, string>;
+  IsAdmin!: Dexie.Table<{ id: string; value: any, expiresAt: number }, string>;
+  loggedIn!: Dexie.Table<{ id: string; value: boolean }, string>;
+
+  constructor() {
+    super('AuthDB');
+    this.version(1).stores({
+      accessToken: 'id, expiresAt',
+      IsAdmin: 'id,expiresAt',
+      loggedIn: 'id,expiresAt'
+    });
+    this.accessToken= this.table('accessToken');
+    this.IsAdmin = this.table('IsAdmin');
+    this.loggedIn = this.table('loggedIn')
+  }
+
+
+  async saveToken(value: string, ttlMinutes: 15) {
+    const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
+    await this.accessToken.put({ id: 'accessToken', value, expiresAt });
+  }
+
+  async saveUser(value: any, ttlMinutes: 15) {
+    const expiresAt = Date.now() + ttlMinutes * 60 * 1000; // 15 minutos por defecto
+    await this.IsAdmin.put({ id: 'IsAdmin', value, expiresAt });
+  }
+
+  async saveLoggedIn(value: boolean) {
+    await this.loggedIn.put({ id: 'loggedIn', value });
+  }
+
+  async getIsAdmin(): Promise<any | undefined> {
+    const record = await this.IsAdmin.get('IsAdmin');
+    return record?.value;
+  }
+
+  async getLoggedIn(): Promise<boolean | undefined> {
+    const record = await this.loggedIn.get('loggedIn');
+
+    return record?.value;
+  }
+  async getToken(): Promise<string | undefined> {
+    const record = await this.accessToken.get('accessToken');
+    console.log('Token en dexie: ' , record);
+    if (!record) return undefined;
+
+    if (record.expiresAt && record.expiresAt < Date.now()) {
+      console.warn('Token expirado');
+      await this.accessToken.delete('accessToken');
+      return undefined;
+    }
+    return record.value;
+  }
+
+  
+
+
+
+  async clearAll() {
+    await this.accessToken.clear();
+    await this.IsAdmin.clear();
+    await this.loggedIn.clear();
+  }
+
+  async cleanupExpired() {
+    const now = Date.now();
+    await this.accessToken.where('expiresAt').below(now).delete();
+    await this.IsAdmin.where('expiresAt').below(now).delete();
+    await this.loggedIn.where('expiresAt').below(now).delete();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+-------------------------
+
+
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AppConfigService } from '../../../services/app-config.service';
+import * as forge from 'node-forge';
+
+
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+
+  private apiUrl: string;
+  private publicK: string;
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {
+    this.apiUrl = this.config.apiUrl;
+    this.publicK = this.config.publicKey;
+  }
+
+  login(Usuario: string, Contraseña: string): Observable<any> {
+    const publicKey = forge.pki.publicKeyFromPem(atob(this.config.publicKey));
+    const passEncryp = forge.util.encode64(publicKey.encrypt(Contraseña, 'RSA-OAEP', { md: forge.md.sha1.create() }));
+    const body = { Usuario, Contraseña: passEncryp };
+    return this.http.post<any>(`${this.apiUrl}/auth/login`, body);
+  }
+}
+
+
+
+------------------
+
+
+
+
+
+
+// import { AuthStateService } from './Services/login-AuthState.services';
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+import { AuthService } from './services/login.service';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { AuthDB } from './services/auth-bd';
+
+
+@Component({
+  selector: 'app-login',
+  styleUrls: ['./login.component.css'],
+  imports: [ReactiveFormsModule, CommonModule],
+  templateUrl: './login.component.html',
+  animations: [
+    trigger('fadeOut', [
+      transition(':leave', [
+        animate('900ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' }))
+      ])
+    ])
+  ]
+})
+
+export class LoginComponent {
+  showLogin = true;
+  loginForm: FormGroup;
+  loading = false;
+   private authDB = new AuthDB();
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    // private AuthStateService: AuthStateService,
+    private router: Router
+  ) {
+    this.loginForm = this.fb.group({
+      usuario: ['', Validators.required],
+      psw: ['', Validators.required]
+    });
+  }
+
+  // async ngOnInit() {
+  //   this.AuthStateService.clearSession();
+  // }
+
+  async loginPortal() {
+
+    if (this.loginForm.invalid) return;
+
+    this.loading = true;
+
+    Swal.fire({
+      title: 'Iniciando sesión...',
+
+      html: `
+            <style>
+              .spinner-ring {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100px;
+              }
+
+              .ring {
+                width: 45px;
+                height: 45px;
+                border: 5px solid #007bff;
+                border-radius: 50%;
+                border-top-color: transparent;
+                animation: spin 1s linear infinite;
+              }
+
+              @keyframes spin {
+                to {
+                  transform: rotate(360deg);
+                }
+              }
+            </style>
+            <div class="spinner-ring">
+              <div class="ring"></div>
+            </div>
+            <p class="mt-3">Verificando credenciales...</p>
+          `,
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    const usuario = this.loginForm.value.usuario;
+    const contraseña = this.loginForm.value.psw;;
+
+    this.authService.login(usuario, contraseña).subscribe({
+      next: async (response) => {
+        console.log(`Respuesta login: ${JSON.stringify(response.data)}`);
+
+        this.loading = false;
+        // Swal.close();
+        if (response.code === '200' && response.success) {
+          // await this.authDB.saveToken(response.data.accessToken);
+          // await this.authDB.saveUser(response.data.user)
+          // await this.authDB.saveLoggedIn(response.success)
+
+          const token = response.data?.accesToken;
+          if(token){
+            localStorage.setItem('access_token', token);
+          }
+
+          Swal.update({
+            icon: 'success',
+            html: '',
+            title: '¡Sesión iniciada!',
+            text: 'Redirigiendo al portal...',
+            showConfirmButton: false
+          });
+          setTimeout(() => {
+            Swal.close();
+            this.router.navigate(['/home']);
+          }, 1500);
+          this.showLogin = false;
+
+          // this.router.navigate(['/home'],);
+          // setTimeout(() => {
+          //   this.router.navigate(['/home']);
+          //   Swal.close();
+          // }, 1000);
+          // Swal.fire('Logueo Exitoso', `Usuario: ${JSON.stringify(response.data.user.userName)}`, 'success');
+        } else {
+          Swal.close();
+          this.showErrorModal(response.errors?.mensaje || response.message || 'Error desconocido');
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        Swal.close();
+        const mensajeError = err?.error?.errors?.mensaje || err?.error?.message || 'Error de conexión con el servidor.';
+        this.showErrorModal(mensajeError);
+      }
+    });
+  }
+
+
+  showErrorModal(message: string) {
+    Swal.fire({
+      icon: 'error',
+      title: message,
+      text: 'Error de inicio de sesión',
+      confirmButtonText: 'Aceptar',
+      customClass: {
+        confirmButton: 'btn btn-primary'
+      },
+      buttonsStyling: false
+    });
+
+  }
+}
+
+
+
+
+
+
+
+--------
+
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
+
+import { AreasService } from './services/areas.service';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-areas',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, SideBarComponent],
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  isSidebarCollapsed = false;
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+
+  editMode = false;
+  currentId: string | null = null;
+  showModal = false; // 👈 control Angular (NO JS directo)
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) {}
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+
+    this.loadAreas();
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showModal = true;
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const body = this.areaForm.value;
+
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeModal();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada', 'success');
+            this.loadAreas();
+          }
+        });
+      }
+    });
+  }
+
+
+
+
+
+-------------------
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AppConfigService } from '../../../services/app-config.service';
+import { from, Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+import { AuthDB } from '../../login/services/auth-bd';
+
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AreasService {
+
+  private apiUrl: string;
+  private authDB = new AuthDB();
+
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {
+    this.apiUrl = this.config.apiUrl;
+  }
+
+  // 🔹 GET ÁREAS
+  getAreas(): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(accessToken=> {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${accessToken}`
+        });
+        return this.http.get(`${this.apiUrl}/areas`, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 CREAR
+  crearArea(body: any): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(accessToken=> {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.post(`${this.apiUrl}/areas/crear`, body, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 ACTUALIZAR
+  actualizarArea(id: string, body: any): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(accessToken=> {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.put(`${this.apiUrl}/areas/actualizar/${id}`, body, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 ELIMINAR
+  eliminarArea(id: string): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(accessToken=> {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${accessToken}`
+        });
+        return this.http.delete(`${this.apiUrl}/areas/eliminar/${id}`, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔥 MANEJO CENTRAL DE 401
+  private handle401(error: any) {
+    if (error.status === 401) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sesión expirada',
+        text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+        confirmButtonText: 'Ir al login'
+      }).then(() => {
+        window.location.href = '/';
+      });
+    }
+    return throwError(() => error);
+  }
+}
+
+
+}
+
