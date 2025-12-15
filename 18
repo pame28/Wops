@@ -1,3 +1,77 @@
+import Dexie from 'dexie';
+
+// auth-db.service.ts
+export class AuthDB extends Dexie {
+  accessToken!: Dexie.Table<{ id: string; value: string, expiresAt: number }, string>;
+  IsAdmin!: Dexie.Table<{ id: string; value: any, expiresAt: number }, string>;
+  loggedIn!: Dexie.Table<{ id: string; value: boolean }, string>;
+
+  constructor() {
+    super('AuthDB');
+    this.version(1).stores({
+      accessToken: 'id, expiresAt',
+      IsAdmin: 'id,expiresAt',
+      loggedIn: 'id,expiresAt'
+    });
+    this.accessToken= this.table('accessToken');
+    this.IsAdmin = this.table('IsAdmin');
+    this.loggedIn = this.table('loggedIn')
+  }
+
+
+  async saveToken(value: string, ttlMinutes: 15) {
+    const expiresAt = Date.now() + ttlMinutes * 60 * 1000;
+    await this.accessToken.put({ id: 'accessToken', value, expiresAt });
+  }
+
+  async saveUser(value: any, ttlMinutes: 15) {
+    const expiresAt = Date.now() + ttlMinutes * 60 * 1000; // 15 minutos por defecto
+    await this.IsAdmin.put({ id: 'IsAdmin', value, expiresAt });
+  }
+
+  async saveLoggedIn(value: boolean) {
+    await this.loggedIn.put({ id: 'loggedIn', value });
+  }
+
+  async getIsAdmin(): Promise<any | undefined> {
+    const record = await this.IsAdmin.get('IsAdmin');
+    return record?.value;
+  }
+
+  async getLoggedIn(): Promise<boolean | undefined> {
+    const record = await this.loggedIn.get('loggedIn');
+    return record?.value;
+  }
+  async getToken(): Promise<string | undefined> {
+    const record = await this.accessToken.get('accessToken');
+    if (!record) return undefined;
+
+    if (record.expiresAt && record.expiresAt < Date.now()) {
+      await this.accessToken.delete('accessToken');
+      return undefined;
+    }
+    return record.value;
+  }
+
+
+
+  async clearAll() {
+    await this.accessToken.clear();
+    await this.IsAdmin.clear();
+    await this.loggedIn.clear();
+  }
+
+  async cleanupExpired() {
+    const now = Date.now();
+    await this.accessToken.where('expiresAt').below(now).delete();
+    await this.IsAdmin.where('expiresAt').below(now).delete();
+    await this.loggedIn.where('expiresAt').below(now).delete();
+  }
+}
+
+
+
+
 
 
 
