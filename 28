@@ -1,3 +1,127 @@
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import Swal from 'sweetalert2';
+import { AreasService } from './services/areas.service';
+
+@Component({
+  selector: 'app-areas',
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+  showCard = false; // controla la card
+  editMode = false;
+  currentId: string | null = null;
+
+  searchText: string = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) { }
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+
+    this.loadAreas();
+  }
+
+  // Filtra áreas según el searchText
+  filteredAreas(): any[] {
+    const search = this.searchText.toLowerCase();
+    return this.areas.filter(a => a.nombre.toLowerCase().includes(search));
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  // Abrir card para crear
+  openCreateCard() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showCard = true;
+  }
+
+  // Abrir card para editar
+  openEditCard(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showCard = true;
+  }
+
+  closeCard() {
+    this.showCard = false;
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const body = this.areaForm.value;
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeCard();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada', 'success');
+            this.loadAreas();
+          }
+        });
+      }
+    });
+  }
+
+}
+
+
+
+
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
