@@ -1,0 +1,325 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
+
+import { AreasService } from './services/areas.service';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-areas',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, SideBarComponent],
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  isSidebarCollapsed = false;
+
+  areas: any[] = [];
+  searchText = '';
+
+  areaForm!: FormGroup;
+
+  showModal = false;
+  editMode = false;
+  currentId: string | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) {}
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+
+    this.loadAreas();
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  filteredAreas() {
+    return this.areas.filter(a =>
+      a.nombre?.toLowerCase().includes(this.searchText.toLowerCase())
+    );
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showModal = true;
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id; // ⚠️ CONFIRMA ESTE ID
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const body = this.areaForm.value;
+
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeModal();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada', 'success');
+            this.loadAreas();
+          }
+        });
+      }
+    });
+  }
+}
+
+
+
+
+
+
+
+-----111
+
+
+
+
+<!-- LAYOUT -->
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content" [class.collapsed]="isSidebarCollapsed">
+    <div class="card">
+      <div class="card-header">
+        <h2>Áreas</h2>
+
+        <div class="actions">
+          <input
+            type="text"
+            placeholder="Buscar..."
+            [(ngModel)]="searchText"
+          />
+
+          <button class="btn-primary" (click)="openCreateModal()">
+            + Nueva Área
+          </button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Zona</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let area of filteredAreas()">
+            <td>{{ area.id }}</td>
+            <td>{{ area.nombre }}</td>
+            <td>
+              <button class="icon edit" (click)="openEditModal(area)">✏</button>
+              <button class="icon delete" (click)="deleteArea(area.id)">🗑</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL (VA AQUÍ, ABAJO DEL TODO) -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal">
+    <h3>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h3>
+
+    <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+      <label>Zona</label>
+      <input type="text" formControlName="nombre" />
+
+      <div class="modal-actions">
+        <button class="btn-primary" type="submit">
+          {{ editMode ? 'Actualizar' : 'Guardar' }}
+        </button>
+
+        <button class="btn-outline" type="button" (click)="closeModal()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+....//
+
+
+
+
+
+/* LAYOUT */
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+  transition: margin-left .3s ease;
+}
+
+.content.collapsed {
+  margin-left: 80px;
+}
+
+/* CARD */
+.card {
+  max-width: 720px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  padding: 20px;
+}
+
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #0d6efd;
+  color: white;
+  padding: 10px;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #0d6efd;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-outline {
+  border: 1px solid #ccc;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+}
+
+.icon {
+  border: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.icon.edit { background: #ffc107; }
+.icon.delete { background: #dc3545; color: white; }
+
+/* MODAL */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  width: 380px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+}
+
+.modal input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
