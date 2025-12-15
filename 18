@@ -1,3 +1,68 @@
+
+
+
+
+
+
+X [ERROR] TS2307: Cannot find module 'dexie' or its corresponding type declarations. [plugin angular-compiler]
+
+    src/app/features/login/services/auth-bd.ts:1:18:
+      1 │ import Dexie from 'dexie';
+        ╵                   ~~~~~~~
+
+
+X [ERROR] TS2339: Property 'version' does not exist on type 'AuthDB'. [plugin angular-compiler]
+
+    src/app/features/login/services/auth-bd.ts:11:9:
+      11 │     this.version(1).stores({
+         ╵          ~~~~~~~
+
+
+X [ERROR] TS2339: Property 'table' does not exist on type 'AuthDB'. [plugin angular-compiler]
+
+    src/app/features/login/services/auth-bd.ts:16:27:
+      16 │     this.accessToken= this.table('accessToken');
+         ╵                            ~~~~~
+
+
+X [ERROR] TS2339: Property 'table' does not exist on type 'AuthDB'. [plugin angular-compiler]
+
+    src/app/features/login/services/auth-bd.ts:17:24:
+      17 │     this.IsAdmin = this.table('IsAdmin');
+         ╵                         ~~~~~
+
+
+X [ERROR] TS2339: Property 'table' does not exist on type 'AuthDB'. [plugin angular-compiler]
+
+    src/app/features/login/services/auth-bd.ts:18:25:
+      18 │     this.loggedIn = this.table('loggedIn')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AppConfigService } from '../../../services/app-config.service';
