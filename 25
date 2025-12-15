@@ -1,11 +1,29 @@
-'ngIf' is deprecated.ngtsc(6385)
-common_module.d.d.ts(831, 8): The declaration was marked as deprecated here.
-areas.component.ts(13, 16): Suggestion occurs in the template of component AreasComponent.
-deprecated,declare (property) NgIf<boolean>.ngIf: boolean
-The Boolean expression to evaluate as the condition for showing a template.
 
-@deprecated — Use the @if block instead. Intent to remove in v22
+@if (showModal) {
+  <div class="modal-backdrop">
+    <div class="modal">
+      <h3>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h3>
 
+      <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+        <label>Zona</label>
+        <input type="text" formControlName="nombre" />
+
+        <div class="modal-actions">
+          <button class="btn-primary" type="submit">
+            {{ editMode ? 'Actualizar' : 'Guardar' }}
+          </button>
+
+          <button
+            class="btn-outline"
+            type="button"
+            (click)="closeModal()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
 
 
 
