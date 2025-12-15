@@ -1,3 +1,107 @@
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <div class="logo" *ngIf="!isCollapsed">
+      <h2><span class="work">work</span><span class="ops">Ops</span></h2>
+    </div>
+    <button class="toggle-btn" (click)="toggleSidebar()">
+      <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-menu">
+    <ul>
+      <li *ngFor="let item of menuItems">
+        <a 
+          *ngIf="!item.children"
+          [routerLink]="item.link"
+          routerLinkActive="active-link"
+          [routerLinkActiveOptions]="{ exact: !!item.exact }">
+          <i class="fas" [class]="item.icon"></i>
+          <span *ngIf="!isCollapsed" class="menu-label">{{ item.label }}</span>
+        </a>
+
+        <div *ngIf="item.children" class="parent-item">
+          <div class="parent-link" [class.active-link]="isParentActive(item)">
+            <i class="fas" [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed">{{ item.label }}</span>
+          </div>
+          <ul class="submenu" *ngIf="!isCollapsed || isParentActive(item)">
+            <li *ngFor="let child of item.children">
+              <a 
+                [routerLink]="child.link"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: !!child.exact }">
+                <i class="fas" [class]="child.icon"></i>
+                <span>{{ child.label }}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <p class="version">Versión 1.0</p>
+  </div>
+</aside>
+
+
+
+
+
+
+-------
+
+
+
+/* Submenu */
+.parent-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.parent-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+.submenu {
+  list-style: none;
+  padding-left: 30px; /* sangría para ver que es hijo */
+  margin: 0;
+}
+
+.submenu li a {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: background-color 0.3s;
+}
+
+.submenu li a:hover,
+.submenu li a.active-link {
+  background-color: #00C1D4;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <a [routerLink]="child.link"
    routerLinkActive="active-link"
