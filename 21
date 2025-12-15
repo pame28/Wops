@@ -1,0 +1,114 @@
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content-wrapper">
+    <div class="header">
+      <h1>Áreas</h1>
+
+      <div class="actions">
+        <input
+          type="text"
+          placeholder="Buscar área..."
+          [(ngModel)]="searchText"
+          class="search"
+        />
+
+        <button class="btn-primary" (click)="openCreateModal()">
+          + Nueva Área
+        </button>
+      </div>
+    </div>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Zona</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let area of filteredAreas()">
+          <td>{{ area.id }}</td>
+          <td>{{ area.nombre }}</td>
+          <td class="acciones">
+            <button class="btn-icon edit" (click)="openEditModal(area)">✏</button>
+            <button class="btn-icon delete" (click)="deleteArea(area.id)">🗑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal">
+    <h2>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h2>
+
+    <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+      <label>Zona</label>
+      <input
+        type="text"
+        formControlName="nombre"
+        placeholder="Ej: Zona Norte"
+      />
+
+      <div class="modal-buttons">
+        <button class="btn-primary" type="submit">
+          {{ editMode ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button class="btn-outline" type="button" (click)="closeModal()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
+
+------1
+
+
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal {
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  width: 420px;
+  max-width: 95%;
+  box-shadow: 0 15px 40px rgba(0,0,0,.25);
+  animation: scaleIn .25s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
+
+-----
+
