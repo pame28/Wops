@@ -1,3 +1,76 @@
+
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.search {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #ccc;
+  padding: 8px 14px;
+  border-radius: 8px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  background: #0d6efd;
+  color: white;
+  padding: 12px;
+}
+
+.tabla td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon {
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-icon.edit { background: #ffc107; }
+.btn-icon.delete { background: #dc3545; color: white; }
+
+
+
+
+
+---11
+
+
 <div class="layout">
   <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
 
