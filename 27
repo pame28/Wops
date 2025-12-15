@@ -1,0 +1,177 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { AreasService } from './services/areas.service';
+import Swal from 'sweetalert2';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-areas',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, SideBarComponent],
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  areaForm!: FormGroup;
+  searchControl = new FormControl('');
+  areas: any[] = [];
+  editMode = false;
+  currentId: string | null = null;
+  showModal = false;
+  isSidebarCollapsed = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) {}
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['']
+    });
+    this.loadAreas();
+
+    // Suscribirse a cambios en el searchControl para filtrar
+    this.searchControl.valueChanges.subscribe(() => this.filteredAreas());
+  }
+
+  filteredAreas(): any[] {
+    const text = this.searchControl.value?.toLowerCase() || '';
+    return this.areas.filter(a => a.nombre.toLowerCase().includes(text));
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showModal = true;
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveArea() {
+    if (!this.areaForm.valid) return;
+    const body = this.areaForm.value;
+
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeModal();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada', 'success');
+            this.loadAreas();
+          }
+        });
+      }
+    });
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+}
+
+
+
+
+
+
+
+
+
+------1111
+
+
+
+
+
+
+<div class="card-header">
+  <div class="actions">
+    <input type="text" placeholder="Buscar..." [formControl]="searchControl" />
+
+    <button class="btn-primary" (click)="openCreateModal()">
+      + Nueva Área
+    </button>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Zona</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let area of filteredAreas()">
+      <td>{{ area.id }}</td>
+      <td>{{ area.nombre }}</td>
+      <td class="acciones-icon">
+        <button class="icon edit" (click)="openEditModal(area)" aria-label="Editar">
+          <i class="fa-regular fa-pen-to-square"></i>
+        </button>
+        <button class="icon delete" (click)="deleteArea(area.id)" aria-label="Eliminar">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- MODAL -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal">
+    <h3>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h3>
+
+    <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+      <label>Zona</label>
+      <input type="text" formControlName="nombre" />
+
+      <div class="modal-actions">
+        <button class="btn-primary" type="submit">{{ editMode ? 'Actualizar' : 'Guardar' }}</button>
+        <button class="btn-outline" type="button" (click)="closeModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
