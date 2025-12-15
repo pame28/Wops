@@ -1,3 +1,18 @@
+
+<a [routerLink]="child.link"
+   routerLinkActive="active-link"
+   [routerLinkActiveOptions]="{ exact: !!child.exact }">
+  <i class="fas" [class]="child.icon"></i>
+  <span class="menu-label">{{ child.label }}</span>
+</a>
+
+
+
+
+
+
+
+
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
