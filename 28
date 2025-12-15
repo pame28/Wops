@@ -1,4 +1,52 @@
 
+saveArea() {
+  if (this.areaForm.invalid) return;
+
+  const body = this.areaForm.value;
+
+  let request$;
+  if (this.editMode && this.currentId) {
+    // Enviar id y nombre al backend
+    request$ = this.areasService.actualizarArea(this.currentId, {
+      id: this.currentId,
+      nombre: body.nombre
+    });
+  } else {
+    request$ = this.areasService.crearArea(body);
+  }
+
+  request$.subscribe({
+    next: () => {
+      Swal.fire(
+        'Éxito',
+        this.editMode ? 'Área actualizada' : 'Área creada',
+        'success'
+      );
+      this.loadAreas();
+      this.closeModal();
+    },
+    error: (err) => {
+      console.error(err);
+      Swal.fire('Error', 'No se pudo guardar', 'error');
+    }
+  });
+}
+
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
