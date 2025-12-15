@@ -1,22 +1,123 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import Swal from 'sweetalert2';
+import { AreasService } from './services/areas.service';
+
+@Component({
+  selector: 'app-areas',
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+  showCard = false; // controla la card
+  editMode = false;
+  currentId: string | null = null;
+
+  searchText: string = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) { }
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+
+    this.loadAreas();
+  }
+
+  // Filtra áreas según el searchText
+  filteredAreas(): any[] {
+    const search = this.searchText.toLowerCase();
+    return this.areas.filter(a => a.nombre.toLowerCase().includes(search));
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  // Abrir card para crear
+  openCreateCard() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showCard = true;
+  }
+
+  // Abrir card para editar
+  openEditCard(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showCard = true;
+  }
+
+  closeCard() {
+    this.showCard = false;
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const body = this.areaForm.value;
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeCard();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+
+
+
+
+
+
+
+---11
+
+
+
+
+
 <div class="content-wrapper">
+
+  <!-- Header con búsqueda y botón crear -->
+  <div class="main-title">
+    <div class="home-title">
+      <h1>Áreas</h1>
+    </div>
+  </div>
+
   <div class="layout">
     <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
 
-    <div class="content" [class.collapsed]="isSidebarCollapsed">
+    <div class="content">
+      <div class="card main-card">
+        <div class="card-header">
+          <input type="text" placeholder="Buscar..." [(ngModel)]="searchText" />
+          <button class="btn-primary" (click)="openCreateCard()">+ Nueva Área</button>
+        </div>
 
-      <!-- Título -->
-      <div class="main-title">
-        <h1>Áreas</h1>
-      </div>
-
-      <!-- Acciones y búsqueda -->
-      <div class="card-actions">
-        <input type="text" placeholder="Buscar..." [formControl]="searchControl">
-        <button class="btn-primary" (click)="openCreateModal()">+ Nueva Área</button>
-      </div>
-
-      <!-- Tabla de áreas -->
-      <div class="card">
         <table>
           <thead>
             <tr>
@@ -30,7 +131,7 @@
               <td>{{ area.id }}</td>
               <td>{{ area.nombre }}</td>
               <td class="acciones-icon">
-                <button class="icon edit" (click)="openEditModal(area)">
+                <button class="icon edit" (click)="openEditCard(area)">
                   <i class="fa-regular fa-pen-to-square"></i>
                 </button>
                 <button class="icon delete" (click)="deleteArea(area.id)">
@@ -41,22 +142,26 @@
           </tbody>
         </table>
       </div>
-
-      <!-- Card para crear / editar área -->
-      <div class="form-card" *ngIf="showModal">
-        <h3>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h3>
-        <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
-          <label>Zona</label>
-          <input type="text" formControlName="nombre" placeholder="Nombre de la zona">
-          <div class="form-actions">
-            <button class="btn-primary" type="submit">{{ editMode ? 'Actualizar' : 'Guardar' }}</button>
-            <button class="btn-outline" type="button" (click)="closeModal()">Cancelar</button>
-          </div>
-        </form>
-      </div>
-
     </div>
   </div>
+
+  <!-- CARD QUE FUNCIONA COMO MODAL -->
+  <div class="card-backdrop" *ngIf="showCard">
+    <div class="card modal-card">
+      <h3>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h3>
+      <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+        <label>Zona</label>
+        <input type="text" formControlName="nombre" />
+        <div class="modal-actions">
+          <button class="btn-primary" type="submit">
+            {{ editMode ? 'Actualizar' : 'Guardar' }}
+          </button>
+          <button class="btn-outline" type="button" (click)="closeCard()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </div>
 
 
@@ -66,125 +171,115 @@
 
 
 
-----
+-------
 
-/* Contenido */
+
+
+/* Layout general */
+.layout {
+  display: flex;
+  height: 100%;
+}
+
 .content {
+  flex: 1;
+  padding: 30px;
+}
+
+/* Main Card */
+.main-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
   padding: 20px;
-  transition: margin-left 0.3s;
 }
 
-/* Título */
-.main-title {
-  text-align: center;
-  margin-bottom: 20px;
-}
-.main-title h1 {
-  font-size: 3rem;
-  color: #003865;
-  font-family: "Boogaloo", sans-serif;
-}
-
-/* Acciones */
-.card-actions {
+.card-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 15px;
-  flex-wrap: wrap;
-  gap: 10px;
 }
-.card-actions input {
-  flex: 1;
-  min-width: 180px;
-  padding: 8px;
+
+.card-header input {
+  padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
 }
-.card-actions .btn-primary {
-  padding: 8px 15px;
-  border-radius: 8px;
+
+.btn-primary {
   background: #FDD26E;
-  border: none;
   color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
   cursor: pointer;
 }
 
-/* Tabla */
-.card {
-  max-width: 900px;
-  margin: 0 auto 30px auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  padding: 20px;
-  overflow-x: auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-th {
-  background: #00C1D4;
-  color: white;
-  padding: 10px;
-  text-align: center;
-}
-td {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #eee;
-}
-
-/* Botones de acciones */
 .acciones-icon {
   display: flex;
   justify-content: center;
   gap: 15px;
 }
+
 .icon {
   border: none;
-  cursor: pointer;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
   font-size: 18px;
-  color: white;
 }
-.icon.edit { background: #003865; }
-.icon.delete { background: #dc3545; }
 
-/* Form Card */
-.form-card {
-  max-width: 400px;
-  margin: 0 auto 30px auto;
-  background: #fff;
-  padding: 20px 25px;
+.icon.edit { background: #003865; }
+.icon.delete { background: #dc3545; color: white; }
+
+/* Card modal */
+.card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-card {
+  width: 380px;
+  padding: 25px;
   border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  background: white;
 }
-.form-card h3 {
-  margin-bottom: 15px;
-  color: #003865;
-  text-align: center;
-}
-.form-card input {
+
+.modal-card input {
   width: 100%;
+  margin-top: 8px;
   padding: 8px;
-  margin: 10px 0;
   border-radius: 8px;
   border: 1px solid #ccc;
 }
-.form-actions {
+
+.modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 20px;
 }
-.btn-outline {
-  border: 1px solid #ccc;
-  background: transparent;
-  padding: 8px 15px;
-  border-radius: 8px;
-  cursor: pointer;
+
+/* Títulos */
+.main-title {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.home-title h1 {
+  font-size: 3rem;
+  color: #003865;
 }
 
 
