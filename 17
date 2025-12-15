@@ -1,0 +1,461 @@
+Tengo una pagina para el mantenimiento de areas, ya creé el componente, tengo algo pero no en funcional...
+
+HTML
+
+<div class="layout">
+  <app-side-bar
+    (sidebarToggled)="onSidebarToggled($event)"
+    [class.collapsed]="isSidebarCollapsed">
+  </app-side-bar>
+
+  <div class="content-wrapper">
+
+    <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+      <div class="home-title">
+        <h1><span class="work">Áreas</span></h1>
+      </div>
+    </div>
+
+    <button class="btn-crear" (click)="openCreateModal()">➕ Crear Área</button>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Zona</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let area of areas">
+          <td>{{ area.id }}</td>
+          <td>{{ area.nombre }}</td>
+          <td>
+            <button class="btn-edit" (click)="openEditModal(area)">✏ Editar</button>
+            <button class="btn-delete" (click)="deleteArea(area.id)">🗑 Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<dialog id="areaModal" class="modal">
+  <h2>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h2>
+
+  <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+    <label>Zona:</label>
+    <input formControlName="nombre" type="text">
+
+    <div class="modal-buttons">
+      <button type="submit" class="btn-save">
+        {{ editMode ? 'Actualizar' : 'Crear' }}
+      </button>
+      <button type="button" class="btn-cancel"
+              onclick="document.getElementById('areaModal').close()">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</dialog>
+
+CSS 
+
+* Título del Home */
+.home-title {
+  /* width: 100%; */
+  text-align: center;
+
+}
+/* contenedor que une título + main */
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+/* Título centrado */
+.main-title {
+  display: flex;
+  justify-content: center;
+}
+
+
+.home-title h1 {
+  font-size: 4rem;
+  font-weight: 400;
+  font-family: "Boogaloo", sans-serif;
+}
+
+.home-title .work { color: #FDD26E; }
+.home-title .ops  { color: #00C1D4; }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.tabla th {
+  background: #0056b3;
+  color: white;
+  padding: 12px;
+}
+
+.tabla td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-crear {
+  padding: 10px 15px;
+  background: #007bff;
+  border: none;
+  color: white;
+  margin-bottom: 15px;
+  border-radius: 5px;
+}
+
+.btn-edit {
+  background: #ffc107;
+  padding: 6px;
+  border: none;
+  border-radius: 5px;
+}
+
+.btn-delete {
+  background: #dc3545;
+  padding: 6px;
+  border: none;
+  color: white;
+  border-radius: 5px;
+  margin-left: 5px;
+}
+
+.modal {
+  border: none;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+
+
+
+.TS:
+import { Component, OnInit } from '@angular/core';
+import { AreasService } from './services/areas.service';
+import Swal from 'sweetalert2';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-areas.component',
+  imports: [CommonModule,SideBarComponent, ReactiveFormsModule, FormsModule],
+  templateUrl: './areas.component.html',
+  styleUrl: './areas.component.css',
+})
+export class AreasComponent implements OnInit {
+
+  isSidebarCollapsed = false;
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+  editMode = false;
+  currentId: string | null = null;
+
+  constructor(
+    private areasService: AreasService,
+    private fb: FormBuilder
+  ) {}
+
+  ngOnInit(): void {
+    this.loadAreas();
+
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: (response) => {
+        this.areas = response.data || response;
+      },
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    (document.getElementById('areaModal') as any).showModal();
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+
+    this.areaForm.patchValue({
+      nombre: area.nombre
+    });
+
+    (document.getElementById('areaModal') as any).showModal();
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const data = { nombre: this.areaForm.value.nombre };
+
+    if (this.editMode && this.currentId) {
+      this.areasService.actualizarArea(this.currentId, data).subscribe({
+        next: () => {
+          Swal.fire('Actualizado', 'El área fue actualizada', 'success');
+          this.loadAreas();
+        },
+        error: () => Swal.fire('Error', 'No se pudo actualizar', 'error')
+      });
+    } else {
+      this.areasService.crearArea(data).subscribe({
+        next: () => {
+          Swal.fire('Creado', 'El área fue creada', 'success');
+          this.loadAreas();
+        },
+        error: () => Swal.fire('Error', 'No se pudo crear', 'error')
+      });
+    }
+
+    (document.getElementById('areaModal') as any).close();
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada correctamente', 'success');
+            this.loadAreas();
+          },
+          error: () => Swal.fire('Error', 'No se pudo eliminar', 'error')
+        });
+      }
+    });
+  }
+}
+
+
+
+
+
+Service: import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AppConfigService } from '../../../services/app-config.service';
+
+
+@Injectable({ providedIn: 'root' })
+export class AreasService {
+
+  private apiUrl: string;
+
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {
+    this.apiUrl= this.config.apiUrl;
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('access_token') || '';
+     console.warn(token);
+    return new HttpHeaders({
+      Authorization: `Bearer ${token}`
+
+    });
+  }
+
+  getAreas(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/areas`, { headers: this.getHeaders() });
+  }
+
+  getArea(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/areas/${id}`, { headers: this.getHeaders() });
+  }
+
+  crearArea(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/areas/crear`, data, { headers: this.getHeaders() });
+  }
+
+  actualizarArea(id: string, data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/areas/actualizar/${id}`, data, { headers: this.getHeaders() });
+  }
+
+  eliminarArea(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/areas/eliminar/${id}`, { headers: this.getHeaders() });
+  }
+}
+
+
+
+Pero nada de esto funcional y el html es espantoso o no se si me hace falta implementar o instalar algo mas... quiero que para el servicio tomes en cuenta este ejemplo de otro proyecto, quiero que la estructura sea lo mas apegado a esto posible:
+
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AppConfigService } from '../../../../services/app-config.service';
+import { from, Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import { AuthDB } from '../../../login/Services/login-AuthBd.service';
+import { LogResponse, DetailResponse } from '../models/adminLogs.models';
+import Swal from 'sweetalert2';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AdminLogsServices {
+
+  private apiUrl: string;
+  private authDB = new AuthDB();
+
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) { this.apiUrl = this.config.apiUrl }
+
+  // private authDB = new AuthDB();
+  getLogs(params: { initialDate: string, finalDate: string }): Observable<LogResponse> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        });
+        return this.http.post<LogResponse>(`${this.apiUrl}/logs/get_logs_by_dates`, params, { headers });
+
+      }),
+      catchError(error => {
+        if (error.status === 401) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            confirmButtonText: 'Ir al login',
+            customClass: {
+              confirmButton: 'btn-confirmar'
+            }
+          }).then(() => {
+            window.location.href = '/'; // Redirige al login
+          });
+        }
+        return throwError(() => error);
+      })
+    );
+  }
+
+
+  getDetallePorCif(cif: string): Observable<DetailResponse> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        });
+        const body = { cif: cif };
+        return this.http.post<LogResponse>(`${this.apiUrl}/logs/get_logs_by_cif`, body, { headers });
+      }),
+      catchError(error => {
+        if (error.status === 401) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            confirmButtonText: 'Ir al login',
+            customClass: {
+              confirmButton: 'btn-confirmar'
+            }
+          }).then(() => {
+            window.location.href = '/'; // Redirige al login
+          });
+        }
+        return throwError(() => error);
+      })
+
+    );
+  }
+
+  buscarLogsbyDates(body: any): Observable<LogResponse> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.post<LogResponse>(`${this.apiUrl}/logs/get_logs_by_dates`, body, { headers });
+      }),
+      catchError(error => {
+        if (error.status === 401) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            confirmButtonText: 'Ir al login',
+            customClass: {
+              confirmButton: 'btn-confirmar'
+            }
+          }).then(() => {
+            window.location.href = '/'; // Redirige al login
+          });
+        }
+        return throwError(() => error);
+      })
+
+    );
+  }
+
+  buscarLogsbyCif(body: any): Observable<LogResponse> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.post<LogResponse>(`${this.apiUrl}/logs/get_logs_filtered_by_cif`, body, { headers });
+      }),
+      catchError(error => {
+        if (error.status === 401) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Sesión expirada',
+            text: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+            confirmButtonText: 'Ir al login',
+            customClass: {
+              confirmButton: 'btn-confirmar'
+            }
+          }).then(() => {
+            window.location.href = '/'; // Redirige al login
+          });
+        }
+        return throwError(() => error);
+      })
+
+    );
+  }
+}
+
+
+
+Enviame los archivos completos que debo modificar, paso a paso 
+
