@@ -1,0 +1,112 @@
+Ya me funciona el get pero Ayudmae a arreglar el estilo de eso, porque se ve horrbkem como de kinder. Cuando presiono el boton que segun yo es para editar .. se me pone gris la pantalla como que intenta abrir el modal para actualizar, pero no funciona. Yo pienso que ese mismo modal debe utilizarse tanto para crear como para actualizar.. y solo se le cambia el titulo, pero actualmentr nada de eso funciona
+
+
+
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content-wrapper">
+    <h1 class="title">Áreas</h1>
+
+    <button class="btn-crear" (click)="openCreateModal()">➕ Crear Área</button>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Zona</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let area of areas">
+          <td>{{ area.id }}</td>
+          <td>{{ area.nombre }}</td>
+          <td>
+            <button class="btn-edit" (click)="openEditModal(area)">✏</button>
+            <button class="btn-delete" (click)="deleteArea(area.id)">🗑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal">
+    <h2>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h2>
+
+    <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+      <label for = "nombre">Zona</label>
+      <input id = "nombre" type="text"formControlName ="nombre" />
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn-save">Guardar</button>
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+.title {
+  text-align: center;
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  background: #0056b3;
+  color: white;
+  padding: 10px;
+}
+
+.tabla td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-crear {
+  background: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.btn-edit { background: #ffc107; }
+.btn-delete { background: #dc3545; color: white; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+
+
