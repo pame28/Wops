@@ -1,0 +1,326 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { AppConfigService } from '../../../services/app-config.service';
+import { from, Observable, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
+import Swal from 'sweetalert2';
+import { AuthDB } from '../../login/Services/login-AuthBd.service';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AreasService {
+
+  private apiUrl: string;
+  private authDB = new AuthDB();
+
+  constructor(
+    private http: HttpClient,
+    private config: AppConfigService
+  ) {
+    this.apiUrl = this.config.apiUrl;
+  }
+
+  // 🔹 GET ÁREAS
+  getAreas(): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        });
+        return this.http.get(`${this.apiUrl}/areas`, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 CREAR
+  crearArea(body: any): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.post(`${this.apiUrl}/areas/crear`, body, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 ACTUALIZAR
+  actualizarArea(id: string, body: any): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        });
+        return this.http.put(`${this.apiUrl}/areas/actualizar/${id}`, body, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔹 ELIMINAR
+  eliminarArea(id: string): Observable<any> {
+    return from(this.authDB.getToken()).pipe(
+      switchMap(token => {
+        const headers = new HttpHeaders({
+          Authorization: `Bearer ${token}`
+        });
+        return this.http.delete(`${this.apiUrl}/areas/eliminar/${id}`, { headers });
+      }),
+      catchError(error => this.handle401(error))
+    );
+  }
+
+  // 🔥 MANEJO CENTRAL DE 401
+  private handle401(error: any) {
+    if (error.status === 401) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sesión expirada',
+        text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.',
+        confirmButtonText: 'Ir al login'
+      }).then(() => {
+        window.location.href = '/';
+      });
+    }
+    return throwError(() => error);
+  }
+}
+
+
+
+
+
+______
+
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import Swal from 'sweetalert2';
+
+import { AreasService } from './services/areas.service';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+
+@Component({
+  selector: 'app-areas',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, SideBarComponent],
+  templateUrl: './areas.component.html',
+  styleUrls: ['./areas.component.css']
+})
+export class AreasComponent implements OnInit {
+
+  isSidebarCollapsed = false;
+
+  areas: any[] = [];
+  areaForm!: FormGroup;
+
+  editMode = false;
+  currentId: string | null = null;
+  showModal = false; // 👈 control Angular (NO JS directo)
+
+  constructor(
+    private fb: FormBuilder,
+    private areasService: AreasService
+  ) {}
+
+  ngOnInit(): void {
+    this.areaForm = this.fb.group({
+      nombre: ['', Validators.required]
+    });
+
+    this.loadAreas();
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => this.areas = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openCreateModal() {
+    this.editMode = false;
+    this.currentId = null;
+    this.areaForm.reset();
+    this.showModal = true;
+  }
+
+  openEditModal(area: any) {
+    this.editMode = true;
+    this.currentId = area.id;
+    this.areaForm.patchValue({ nombre: area.nombre });
+    this.showModal = true;
+  }
+
+  closeModal() {
+    this.showModal = false;
+  }
+
+  saveArea() {
+    if (this.areaForm.invalid) return;
+
+    const body = this.areaForm.value;
+
+    const request = this.editMode && this.currentId
+      ? this.areasService.actualizarArea(this.currentId, body)
+      : this.areasService.crearArea(body);
+
+    request.subscribe({
+      next: () => {
+        Swal.fire('Éxito', 'Operación realizada correctamente', 'success');
+        this.loadAreas();
+        this.closeModal();
+      },
+      error: () => Swal.fire('Error', 'No se pudo guardar', 'error')
+    });
+  }
+
+  deleteArea(id: string) {
+    Swal.fire({
+      title: '¿Eliminar área?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.areasService.eliminarArea(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Área eliminada', 'success');
+            this.loadAreas();
+          }
+        });
+      }
+    });
+  }
+}
+
+
+
+
+
+
+
+-------
+
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content-wrapper">
+    <h1 class="title">Áreas</h1>
+
+    <button class="btn-crear" (click)="openCreateModal()">➕ Crear Área</button>
+
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Zona</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let area of areas">
+          <td>{{ area.id }}</td>
+          <td>{{ area.nombre }}</td>
+          <td>
+            <button class="btn-edit" (click)="openEditModal(area)">✏</button>
+            <button class="btn-delete" (click)="deleteArea(area.id)">🗑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal">
+    <h2>{{ editMode ? 'Editar Área' : 'Crear Área' }}</h2>
+
+    <form [formGroup]="areaForm" (ngSubmit)="saveArea()">
+      <label>Zona</label>
+      <input formControlName="nombre" />
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn-save">Guardar</button>
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+-------
+
+
+
+.title {
+  text-align: center;
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  background: #0056b3;
+  color: white;
+  padding: 10px;
+}
+
+.tabla td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-crear {
+  background: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.btn-edit { background: #ffc107; }
+.btn-delete { background: #dc3545; color: white; }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+
