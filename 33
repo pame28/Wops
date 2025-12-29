@@ -1,0 +1,459 @@
+Tengo un problema, mas bien una idea de como hacer que mi codigo sea más limpio, tengo varios mantenimientos que basicamente tienen la misma estructura, mismo modales para editar  y crear. 
+Quiero ver como podemos dejar como una "plantilla y reutilizarla, pero no se como hacerlo ... 
+dime paso a paso qué tengo que hacer, si debo crear otro componente o como ...
+Lo que va a cambiar es la cantidad de campos en la tabla y cosas asi
+
+
+<!-- LAYOUT -->
+   <div class="content-wrapper">
+
+      <!-- Título que debe moverse con el sidebar -->
+      <div class="main-title" [class.collapsed]="isSidebarCollapsed">
+        <div class="home-title">
+          <h1><span class="work">Accesos</span><span class="ops"></span></h1>
+
+        </div>
+
+      </div>
+<div class="layout">
+  <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+  <div class="content" [class.collapsed]="isSidebarCollapsed">
+    <div class="card">
+      <div class="card-header">
+<h2></h2>
+        <div class="actions">
+          <input
+            type="text"
+            placeholder="Buscar..."
+            [(ngModel)]="searchText"
+          />
+
+          <button class="btn-primary" (click)="openCreateCard()">
+            + Nuevo Acceso
+          </button>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let acceso of filteredAccesos()">
+            <td>{{ acceso.id }}</td>
+            <td>{{ acceso.nombre }}</td>
+            <td>{{ acceso.descripcion }}</td>
+            <td class="acciones-icon">
+              <button class="icon edit" (click)="openEditCard(acceso)" aria-label="Editar">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button class="icon delete" (click)="deleteAcceso(acceso.id)" aria-label="Eliminar">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  <!-- CARD QUE FUNCIONA COMO MODAL -->
+
+  <div class="card-backdrop" *ngIf="showCard">
+    <div class="card modal-card">
+      <button class="close-card" (click)="closeCard()">&times;</button>
+      <h1 class="titulo-modal">{{ editMode ? 'Editar Acceso' : 'Nuevo Acceso' }}</h1>
+
+<br>
+    <form [formGroup]="accesoForm" (ngSubmit)="saveAcceso()" class="form-vertical">
+      <label>Nombre Acceso</label>
+      <input type="text" formControlName="nombre" />
+      <div class="error" *ngIf="accesoForm.get('nombre')?.touched && accesoForm.get('nombre')?.invalid">* Este campo es obligatorio</div>
+      <br>
+      <br>
+      <label>Descripción Acceso</label>
+      <input type="text" formControlName="descripcion" />
+      <div class="error" *ngIf="accesoForm.get('descripcion')?.touched && accesoForm.get('descripcion')?.invalid">* Este campo es obligatorio</div>
+
+      <div class="modal-actions">
+        <button class="btn-crear" type="submit">{{ editMode ? 'Actualizar' : 'Crear' }}</button>
+        <button class="btn-outline" type="button" (click)="closeCard()">Cancelar</button>
+      </div>
+    </form>
+
+    </div>
+  </div>
+
+
+
+
+
+/* LAYOUT */
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 40px;
+  transition: margin-left .4s ease;
+}
+
+.content:not(.collapsed) {
+  margin-left: 220px;
+}
+
+/* CARD */
+.card {
+  max-width: 900px;  /* Se hace la tabla más ancha */
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  padding: 20px;
+}
+
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #00C1D4;
+  color: white;
+  padding: 10px;
+  text-align: center;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* BUTTONS */
+.btn-primary {
+  background: #FDD26E;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+}
+
+.btn-outline {
+  border: 1px solid #ccc;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+  width: 150px;
+  font-weight: bolder;
+  font-size: 2opx;
+}
+
+.btn-crear {
+  background: #00C1D4;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  width: 150px;
+  font-weight: bolder;
+  font-size: 2opx;
+}
+.acciones-icon {
+  display: flex;
+  justify-content: center;  /* Centra los botones */
+  gap: 15px;  /* Agrega espacio entre los botones */
+}
+
+.icon {
+  border: none;
+  padding: 6px 7px;  /* Aumenta el tamaño de los iconos */
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 16px;  /* Aumenta el tamaño de los iconos */
+}
+
+.icon.edit { background: #003865; }
+.icon.delete { background: #dc3545; color: white; }
+
+
+/* Título centrado */
+.main-title {
+  display: flex;
+  justify-content: center;
+}
+
+.home-title h1 {
+  font-size: 4rem;
+  font-weight: 400;
+  font-family: "Boogaloo", sans-serif;
+  color: #003865;
+}
+
+.content-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+
+
+
+/* Card modal */
+.card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-card {
+  width: 500px;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  background: white;
+}
+
+.modal-card input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+.titulo-modal{
+    color: #003865;
+    font-family: "Boogaloo", sans-serif;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+/* Títulos */
+.main-title {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.home-title h1 {
+  font-size: 3rem;
+  color: #003865;
+    font-family: "Boogaloo", sans-serif;
+}
+
+.error{
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+.close-card{
+  position:absolute;
+  top:10px;
+  right:15px;
+  font-size: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: red;
+  font-weight:bolder ;
+}
+
+
+.form-vertical label {
+  font-weight: 600;
+  color: var(--bp-blue-experto)
+}
+
+
+.form-vertical input {
+  border-color: var(--bp-blue-experto);
+}
+
+
+/* Cuando estás dentro del input escribiendo */
+.form-vertical input:focus {
+  border-color: var(--bp-celeste);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bp-aqua-digital);
+  border-color: var(--bp-aqua-digital);
+}
+
+
+
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { CommonModule} from '@angular/common';
+import { SideBarComponent } from '../../shared/side-bar/side-bar';
+import Swal from 'sweetalert2';
+import { AccesosService } from './services/accesos.service';
+
+
+@Component({
+  selector: 'app-accesos',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, SideBarComponent,FormsModule],
+  templateUrl: './accesos.component.html',
+  styleUrls: ['./accesos.component.css']
+})
+export class AccesosComponent implements OnInit {
+
+  accesos: any[] = [];
+  searchText: string = '';
+  accesoForm!: FormGroup;
+  showCard = false; // controla la card
+  editMode = false;
+  currentId: string | null = null;
+  isSidebarCollapsed = false;
+
+  constructor(private fb: FormBuilder, private accesosService: AccesosService) {}
+
+  ngOnInit(): void {
+    this.accesoForm = this.fb.group({
+      nombre: ['', Validators.required],
+      descripcion: ['', Validators.required],
+    });
+    this.loadAccesos();
+  }
+
+  filteredAccesos() {
+    if (!this.searchText) return this.accesos;
+    return this.accesos.filter(a =>
+      a.nombre.toLowerCase().includes(this.searchText.toLowerCase())
+    );
+  }
+
+  loadAccesos() {
+    this.accesosService.getAccesos().subscribe({
+      next: resp => this.accesos = resp.data ?? resp,
+      error: () => Swal.fire('Error', 'No se pudieron cargar las accesos', 'error')
+    });
+  }
+  // Abrir card para crear
+  openCreateCard() {
+    this.editMode = false;
+    this.currentId = null;
+    this.accesoForm.reset();
+    this.showCard = true;
+  }
+
+  // Abrir card para editar
+
+openEditCard(acceso: any) {
+  this.editMode = true;
+  this.currentId = acceso.id;
+
+  // Limpia el formulario para evitar valores previos
+  this.accesoForm.reset();
+
+  // Parcha ambos campos (usa fallback si el backend usa otros nombres)
+  this.accesoForm.patchValue({
+    nombre: acceso.nombre,
+    descripcion: acceso.descripcion
+  });
+
+  this.showCard = true;
+}
+
+  closeCard() {
+    this.showCard = false;
+  }
+
+  saveAcceso() {
+    if (this.accesoForm.invalid) {
+      this.accesoForm.markAllAsTouched();
+      return;}
+
+    const body = this.accesoForm.value;
+
+   let request$;
+  if (this.editMode && this.currentId) {
+    // Enviar id y nombre al backend
+    request$ = this.accesosService.actualizarAcceso(this.currentId, {
+      id: this.currentId,
+      nombre: body.nombre,
+      descripcion: body.descripcion,
+    });
+  } else {
+
+ request$ = this.accesosService.crearAcceso(body);
+  }
+      request$.subscribe({
+    next: () => {
+      Swal.fire(
+        'Éxito',
+        this.editMode ? 'Acceso actualizado' : 'Acceso creado',
+        'success'
+      );
+      this.loadAccesos();
+      this.closeCard();
+    },
+    error: (err) => {
+      console.error(err);
+      Swal.fire('Error', 'No se pudo guardar', 'error');
+    }
+  });
+}
+
+  deleteAcceso(id: string) {
+    Swal.fire({
+      title: '¿Eliminar acceso?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.accesosService.eliminarAcceso(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Acceso eliminado', 'success');
+            this.loadAccesos();
+          }
+        });
+      }
+    });
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+}
+
+
+
