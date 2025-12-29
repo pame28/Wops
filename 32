@@ -1,0 +1,274 @@
+Mira tengo problemas con el submenu de mi sidenav, es algo mas de diseño, el problema es que, cuando se selecciona un item del submenu .. deja un espcio en la izquierda sin colorear, creo que el padding left es el que está afectando, el problema es que esa esa sangria la que yo quiero, no se como hacer, te compartiré mis archivos de html y css
+
+
+
+<aside class="sidebar" [class.collapsed]="isCollapsed">
+  <div class="sidebar-header">
+    <div class="logo" *ngIf="!isCollapsed">
+
+        <img (click)="redireccionarARuta('/home')"
+             class="nav-img"
+             src="/assets/images/logo_BP.png"
+             alt="Logo Banpaís">
+
+    </div>
+    <button class="toggle-btn" (click)="toggleSidebar()">
+      <i class="fas" [class.fa-chevron-left]="!isCollapsed" [class.fa-chevron-right]="isCollapsed"></i>
+    </button>
+  </div>
+
+  <nav class="sidebar-menu">
+    <ul>
+      <li *ngFor="let item of menuItems">
+        <ng-container *ngIf="!item.children">
+          <a
+            [routerLink]="item.link"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: item.exact === true }"
+          >
+            <i class="fas" [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed" class="menu-label">{{ item.label }}</span>
+          </a>
+        </ng-container>
+
+
+        <ng-container *ngIf="item.children">
+          <a
+            class=" sidebar-menu"
+            [routerLink]="item.link"
+            routerLinkActive="active-link"
+            [routerLinkActiveOptions]="{ exact: true }"
+          >
+            <i class="fas" [class]="item.icon"></i>
+            <span *ngIf="!isCollapsed" class="menu-label ">{{ item.label }}</span>
+
+            <!-- La flecha es el único que hace toggle -->
+            <i
+              *ngIf="!isCollapsed"
+              class="fas fa-chevron-down toggle-icon"
+              [class.expanded]="item.expanded"
+              (click)="onChevronClick(item, $event)"
+            ></i>
+          </a>
+
+          <ul *ngIf="item.expanded && !isCollapsed" class="submenu">
+            <li *ngFor="let child of item.children">
+              <a
+                [routerLink]="child.link"
+                routerLinkActive="active-link"
+                [routerLinkActiveOptions]="{ exact: !!child.exact }"
+              >
+                <i class="fas" [class]="child.icon"></i>
+                <span class="menu-label">{{ child.label }}</span>
+              </a>
+            </li>
+          </ul>
+        </ng-container>
+
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer" *ngIf="!isCollapsed">
+    <p class="version">Versión 1.0</p>
+  </div>
+</aside>
+
+
+
+
+
+
+CSS
+
+/* Estructura principal */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 300px;
+  /* background-color: #003865; */
+   background-color: #003865;
+  color: #FFFFFF;
+  transition: width 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;   /* centra horizontalmente */
+  align-items: center;       /* centra verticalmente */
+  min-height: 80px;
+  gap: 10px;
+}
+
+
+.logo h2 {
+  font-size: 3rem;
+  font-weight: bolder;
+  font-family: "Boogaloo", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  width: 100%;
+  text-align: center;
+}
+
+.nav-img {
+  height: 60px;
+  cursor: pointer;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #FFFFFF;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+
+}
+
+.toggle-btn:hover {
+  background-color: #00C1D4;
+}
+
+/* Menú */
+.sidebar-menu {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.sidebar-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-menu li {
+  margin: 5px 0;
+}
+
+.sidebar-menu a {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+.sidebar-menu a:hover {
+  background-color: #00C1D4;
+
+}
+
+.sidebar-menu a.active-link {
+    background-color: #00C1D4;
+}
+
+.sidebar-menu i {
+  width: 24px;
+  text-align: center;
+  font-size: 1.1rem;
+  margin-right: 15px;
+}
+
+.sidebar.collapsed .menu-label {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-menu i {
+  margin-right: 0;
+}
+
+/* Footer */
+.sidebar-footer {
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.8rem;
+  color: #95a5a6;
+  text-align: center;
+}
+
+.version {
+  margin: 0;
+}
+
+/* Scrollbar personalizado */
+.sidebar-menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+  background: #3498db;
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 0;
+  }
+
+  .sidebar:not(.collapsed) {
+    width: 250px;
+  }
+}
+
+
+.submenu {
+  list-style: none;
+  margin-top: 5px;
+
+}
+
+.submenu li {
+  padding-left: 2rem;
+}
+
+.submenu li a {
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.submenu li a.active-link {
+  background-color: #00C1D4;
+}
+
+.toggle-icon {
+  transition: transform 0.2s ease;
+  transform: rotate(270deg);
+  margin-left: 70px;
+}
+
+.toggle-icon.expanded {
+  transform: rotate(360deg);
+}
+
+
+
