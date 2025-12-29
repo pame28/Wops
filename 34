@@ -1,0 +1,433 @@
+<div class="card">
+  <div class="card-header">
+    <h2>{{ title }}</h2>
+
+    <div class="actions">
+      <input
+        type="text"
+        placeholder="Buscar..."
+        [(ngModel)]="searchText"
+      />
+
+      <button class="btn-primary" (click)="onCreate.emit()">
+        + {{ createLabel }}
+      </button>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th *ngFor="let col of columns">{{ col.header }}</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let item of filteredData()">
+        <td *ngFor="let col of columns">
+          {{ item[col.field] }}
+        </td>
+
+        <td class="acciones-icon">
+          <button class="icon edit" (click)="onEdit.emit(item)">
+            <i class="fa-regular fa-pen-to-square"></i>
+          </button>
+          <button class="icon delete" (click)="onDelete.emit(item)">
+            <i class="fa-regular fa-trash-can"></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+@Component({
+  selector: 'app-crud-layout',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './crud-layout.component.html'
+})
+export class CrudLayoutComponent {
+
+  @Input() title = '';
+  @Input() createLabel = 'Nuevo';
+  @Input() data: any[] = [];
+  @Input() columns: { field: string; header: string }[] = [];
+
+  @Output() onCreate = new EventEmitter<void>();
+  @Output() onEdit = new EventEmitter<any>();
+  @Output() onDelete = new EventEmitter<any>();
+
+  searchText = '';
+
+  filteredData() {
+    if (!this.searchText) return this.data;
+
+    return this.data.filter(item =>
+      Object.values(item)
+        .join(' ')
+        .toLowerCase()
+        .includes(this.searchText.toLowerCase())
+    );
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* CARD */
+.card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.08);
+  padding: 20px;
+}
+
+/* HEADER */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.actions input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #00C1D4;
+  color: #fff;
+  padding: 10px;
+  text-align: center;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+}
+
+/* ACTIONS */
+.acciones-icon {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.icon {
+  border: none;
+  padding: 6px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 16px;
+}
+
+.icon.edit {
+  background: #003865;
+}
+
+.icon.delete {
+  background: #dc3545;
+}
+
+/* BUTTON */
+.btn-primary {
+  background: #FDD26E;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---------
+
+
+
+
+
+
+
+
+<div class="card-backdrop">
+  <div class="card modal-card">
+    <button class="close-card" (click)="onClose.emit()">&times;</button>
+
+    <h1 class="titulo-modal">{{ title }}</h1>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit.emit()">
+      <ng-content></ng-content>
+
+      <div class="modal-actions">
+        <button class="btn-crear" type="submit">{{ submitLabel }}</button>
+        <button class="btn-outline" type="button" (click)="onClose.emit()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-crud-modal',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './crud-modal.component.html'
+})
+export class CrudModalComponent {
+  @Input() title = '';
+  @Input() submitLabel = 'Guardar';
+  @Input() form!: FormGroup;
+
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onSubmit = new EventEmitter<void>();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* BACKDROP */
+.card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* MODAL CARD */
+.modal-card {
+  width: 500px;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  background: #fff;
+  position: relative;
+}
+
+/* CLOSE */
+.close-card {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: red;
+  font-weight: bolder;
+}
+
+/* TITLE */
+.titulo-modal {
+  color: #003865;
+  font-family: "Boogaloo", sans-serif;
+  text-align: center;
+}
+
+/* FORM */
+form label {
+  font-weight: 600;
+  color: var(--bp-blue-experto);
+  display: block;
+  margin-top: 15px;
+}
+
+form input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--bp-blue-experto);
+}
+
+form input:focus {
+  border-color: var(--bp-aqua-digital);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bp-aqua-digital);
+}
+
+/* ERRORS */
+.error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+/* ACTIONS */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.btn-crear {
+  background: #00C1D4;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  width: 150px;
+  font-weight: bold;
+}
+
+.btn-outline {
+  border: 1px solid #ccc;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+  width: 150px;
+  font-weight: bold;
+}
+
+
+
+
+
+
+-----
+
+<app-crud-layout
+  title="Accesos"
+  createLabel="Nuevo Acceso"
+  [data]="accesos"
+  [columns]="columns"
+  (onCreate)="openCreateCard()"
+  (onEdit)="openEditCard($event)"
+  (onDelete)="deleteAcceso($event.id)">
+</app-crud-layout>
+
+<app-crud-modal
+  *ngIf="showCard"
+  [title]="editMode ? 'Editar Acceso' : 'Nuevo Acceso'"
+  submitLabel="Guardar"
+  [form]="accesoForm"
+  (onClose)="closeCard()"
+  (onSubmit)="saveAcceso()">
+
+  <!-- CAMPOS ESPECÍFICOS -->
+  <label>Nombre</label>
+  <input formControlName="nombre" />
+
+  <label>Descripción</label>
+  <input formControlName="descripcion" />
+
+</app-crud-modal>
+
+
+
+
+
+
+
+
+
+columns = [
+  { field: 'id', header: 'ID' },
+  { field: 'nombre', header: 'Nombre' },
+  { field: 'descripcion', header: 'Descripción' }
+];
+
+
+
+
+
+
+
+
+
+
