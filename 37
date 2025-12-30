@@ -1,0 +1,143 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-crud-modal',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './crud-modal.component.html',
+  styleUrls: ['./crud-modal.component.css']
+})
+export class CrudModalComponent {
+  @Input() title = '';
+  @Input() submitLabel = 'Guardar';
+
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onSubmit = new EventEmitter<void>();
+}
+
+
+
+
+
+
+
+
+<div class="card-backdrop">
+  <div class="card modal-card">
+
+    <button class="close-card" (click)="onClose.emit()">&times;</button>
+
+    <h1 class="titulo-modal">{{ title }}</h1>
+
+    <!-- ⬇️ EL FORM VIENE DEL PADRE -->
+    <ng-content></ng-content>
+
+    <div class="modal-actions">
+      <button class="btn-crear" type="submit" form="crudForm">
+        {{ submitLabel }}
+      </button>
+
+      <button class="btn-outline" type="button" (click)="onClose.emit()">
+        Cancelar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+<app-crud-modal
+  [hidden]="!showCard"
+  [title]="editMode ? 'Editar Acceso' : 'Nuevo Acceso'"
+  [submitLabel]="editMode ? 'Actualizar' : 'Crear'"
+  (onClose)="closeCard()"
+  (onSubmit)="saveAcceso()">
+
+  <form
+    id="crudForm"
+    [formGroup]="accesoForm"
+    (ngSubmit)="saveAcceso()"
+    class="form-vertical"
+  >
+    <label>Nombre Acceso</label>
+    <input type="text" formControlName="nombre" />
+    <div class="error"
+      *ngIf="accesoForm.get('nombre')?.touched && accesoForm.get('nombre')?.invalid">
+      Campo obligatorio
+    </div>
+
+    <label>Descripción Acceso</label>
+    <input type="text" formControlName="descripcion" />
+    <div class="error"
+      *ngIf="accesoForm.get('descripcion')?.touched && accesoForm.get('descripcion')?.invalid">
+      Campo obligatorio
+    </div>
+  </form>
+
+</app-crud-modal>
+
+
+
+
+
+
+
+
+
+openCreateCard() {
+  this.editMode = false;
+  this.currentId = null;
+
+  this.accesoForm.reset({
+    nombre: '',
+    descripcion: ''
+  });
+
+  this.showCard = true;
+}
+
+openEditCard(acceso: any) {
+  this.editMode = true;
+  this.currentId = acceso.id;
+
+  this.accesoForm.setValue({
+    nombre: acceso.nombre,
+    descripcion: acceso.descripcion
+  });
+
+  this.showCard = true;
+}
+
+closeCard() {
+  this.showCard = false;
+}
+
+saveAcceso() {
+  if (this.accesoForm.invalid) {
+    this.accesoForm.markAllAsTouched();
+    return;
+  }
+
+  const body = this.accesoForm.value;
+  // crear / editar
+}
+
+
+
+
+
+
+
+
+
+
+
+
