@@ -1,48 +1,10 @@
+private resetFormState() {
+  this.accesoForm.markAsPristine();
+  this.accesoForm.markAsUntouched();
 
-Component update sent to client(s).
-Component update failed: NG01050: formControlName must be used with a parent formGroup directive. You'll want to add a formGroup
-      directive and pass it an existing FormGroup instance (you can create one in your class).
-
-      Affected Form Control name: "nombre"
-
-    Example:
-
-    
-  <div [formGroup]="myGroup">
-    <input formControlName="firstName">
-  </div>
-
-  In your class:
-
-  this.myGroup = new FormGroup({
-      firstName: new FormControl()
+  Object.values(this.accesoForm.controls).forEach(control => {
+    control.markAsPristine();
+    control.markAsUntouched();
+    control.updateValueAndValidity();
   });
-Error: NG01050: formControlName must be used with a parent formGroup directive. You'll want to add a formGroup
-      directive and pass it an existing FormGroup instance (you can create one in your class).
-
-      Affected Form Control name: "nombre"
-
-    Example:
-
-    
-  <div [formGroup]="myGroup">
-    <input formControlName="firstName">
-  </div>
-
-  In your class:
-
-  this.myGroup = new FormGroup({
-      firstName: new FormControl()
-  });
-    at controlParentException (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/@angular_forms.js?v=2293bda7:1254:10)
-    at checkParentType (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/@angular_forms.js?v=2293bda7:5176:11)
-    at _FormControlName._setUpControl (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/@angular_forms.js?v=2293bda7:5075:7)
-    at _FormControlName.ngOnChanges (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/@angular_forms.js?v=2293bda7:5033:28)
-    at _FormControlName.rememberChangeHistoryAndInvokeOnChangesHook (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:3477:10)
-    at callHookInternal (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:3613:10)
-    at callHook (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:3631:5)
-    at callHooks (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:3602:9)
-    at executeInitAndCheckHooks (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:3571:5)
-    at selectIndexInternal (http://localhost:4200/@fs/C:/Users/80730.HN/Desktop/PortalDeControl%20Frontend/PortalDeControl/.angular/cache/20.3.12/PortalDeControl/vite/deps/chunk-FS7ZUS3K.js?v=2293bda7:7185:9)
-Please consider reporting the error at https://github.com/angular/angular-cli/issues
-Page reload sent to client(s).
+}
