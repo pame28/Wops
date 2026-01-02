@@ -1,3 +1,63 @@
+
+
+
+
+
+
+
+
+
+import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter } from '@angular/router';
+
+import { routes } from './app.routes';
+import { provideHttpClient } from '@angular/common/http';
+import { AppConfigService } from './services/app-config.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { bootstrapApplication } from '@angular/platform-browser';
+
+export function initAppConfig(appConfig: AppConfigService) {
+  return () => appConfig.loadConfig();
+}
+
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideBrowserGlobalErrorListeners(),
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(),
+
+    AppConfigService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initAppConfig,
+      deps: [AppConfigService],
+      multi: true
+    }
+
+  ]
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Tengo un combobox (select) pero, quiero cambiarle el color cuando uno pasa el mouse y este se muestra gris, quiero cambiarlo a azul, pero no se como hacerlo, te dejo mi codigo de css
 .card-backdrop {
   position: fixed;
