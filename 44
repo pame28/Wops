@@ -1,0 +1,116 @@
+Ayudame a arreglar el boton de close, quiero que aparezca dentro del input en el lado isquierdo, en la esquina superior izquierda, pero no se como arreglarolo, te dejo mi HTML y CSS para que me ayudes a hacer la modificación:
+
+<div class="content-wrapper">
+
+
+  <div class="layout">
+
+    <app-side-bar
+      (sidebarToggled)="onSidebarToggled($event)">
+    </app-side-bar>
+
+    <div class="content" [class.collapsed]="isSidebarCollapsed">
+      <div class="main-title">
+        <div class="home-title">
+          <h1>Mantenimiento de Puestos de Trabajo</h1>
+        </div>
+      </div>
+      <app-mantenimiento-layout
+        createLabel="Nuevo Puesto"
+        [data]="puestosTrabajo"
+        [columns]="columns"
+        (onCreate)="openCreateCard()"
+        (onEdit)="openEditCard($event)"
+        (onDelete)="deletePuestoTrabajo($event.id)">
+      </app-mantenimiento-layout>
+
+    </div>
+  </div>
+</div>
+
+
+
+<app-mantenimiento-modal
+  [hidden]="!showCard"
+  [modalTitle]="editMode ? 'Editar Puesto' : 'Nuevo Puesto'"
+  [submitLabel]="editMode ? 'Actualizar' : 'Crear'"
+  (onClose)="closeCard()"
+  (onSubmit)="savePuestoTrabajo()">
+
+  <form
+    id="crudForm"
+    [formGroup]="puestoTrabajoForm"
+    (ngSubmit)="savePuestoTrabajo()"
+    class="form-vertical"
+  >
+    <label>Nombre Puesto de Trabajo</label>
+    <input type="text" formControlName="nombre" />
+    <div class="error"
+      *ngIf="puestoTrabajoForm.get('nombre')?.touched && puestoTrabajoForm.get('nombre')?.invalid">
+      * Campo obligatorio
+    </div>
+
+
+    <label>Área</label>
+
+<input
+    type="text"
+    placeholder="Seleccione un área"
+    matInput
+    [formControl]="areaCtrl"
+    [matAutocomplete]="auto"
+    class="area-input"
+  >
+
+  <button
+    mat-icon-button
+    *ngIf="areaCtrl.value"
+    (click)="clearArea()"
+    type="button"
+    aria-label="Limpiar área"
+    class="clear-btn-absolute"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <mat-autocomplete #auto="matAutocomplete">
+    <mat-option *ngFor="let area of filteredAreas | async" [value]="area.nombre">
+      {{ area.nombre }}
+    </mat-option>
+  </mat-autocomplete>
+
+    <div class="error"
+        *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
+      Campo obligatorio
+    </div>
+
+  </form>
+</app-mantenimiento-modal>
+
+
+
+
+
+
+
+
+.area-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+  .area-input {
+    width: 100%;
+    padding-right: 40px;
+  }
+
+  .clear-btn-absolute {
+    position: absolute;
+    top: 4px;
+    right: 8px;
+    z-index: 2;
+  }
+
+
+
