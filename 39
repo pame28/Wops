@@ -1,4 +1,16 @@
 
+<label>Área</label>
+    <mat-select class="form-control" formControlName="areaId">
+      <option value="" disabled selected>Seleccione un área</option>
+      <option *ngFor="let area of areas" [value]="area.id">{{ area.nombre }}</option>
+    </mat-select>
+    <div class="error"
+        *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
+      Campo obligatorio
+    </div>
+
+
+
 // Include theming for Angular Material with `mat.theme()`.
 // This Sass mixin will define CSS variables that are used for styling Angular Material
 // components according to the Material 3 design spec.
