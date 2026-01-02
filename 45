@@ -1,0 +1,82 @@
+<label>Área</label>
+
+<div class="area-wrapper">
+
+  <input
+    type="text"
+    placeholder="Seleccione un área"
+    matInput
+    [formControl]="areaCtrl"
+    [matAutocomplete]="auto"
+    class="area-input"
+  />
+
+  <button
+    mat-icon-button
+    *ngIf="areaCtrl.value"
+    (click)="clearArea()"
+    type="button"
+    aria-label="Limpiar área"
+    class="clear-btn"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+</div>
+
+<mat-autocomplete #auto="matAutocomplete">
+  <mat-option *ngFor="let area of filteredAreas | async" [value]="area.nombre">
+    {{ area.nombre }}
+  </mat-option>
+</mat-autocomplete>
+
+<div
+  class="error"
+  *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid"
+>
+  Campo obligatorio
+</div>
+
+
+
+
+
+
+
+
+
+
+.area-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.area-input {
+  width: 100%;
+  padding-left: 36px; /* espacio para la X */
+}
+
+/* Botón X dentro del input */
+.clear-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  min-width: auto;
+  z-index: 5;
+}
+
+/* Ajuste visual del icono */
+.clear-btn mat-icon {
+  font-size: 18px;
+  color: #666;
+}
+
+/* Hover más intuitivo */
+.clear-btn:hover mat-icon {
+  color: #d32f2f;
+}
+
+
