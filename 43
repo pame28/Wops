@@ -1,18 +1,89 @@
+<div class="content-wrapper">
+  <div class="layout">
+    <app-side-bar (sidebarToggled)="onSidebarToggled($event)"></app-side-bar>
+
+    <div class="content" [class.collapsed]="isSidebarCollapsed">
+      <div class="main-title">
+        <div class="home-title">
+          <h1>Mantenimiento de Puestos de Trabajo</h1>
+        </div>
+      </div>
+
+      <app-mantenimiento-layout
+        createLabel="Nuevo Puesto"
+        [data]="puestosTrabajo"
+        [columns]="columns"
+        (onCreate)="openCreateCard()"
+        (onEdit)="openEditCard($event)"
+        (onDelete)="deletePuestoTrabajo($event.id)">
+      </app-mantenimiento-layout>
+    </div>
+  </div>
+</div>
+
+<app-mantenimiento-modal
+  [hidden]="!showCard"
+  [modalTitle]="editMode ? 'Editar Puesto' : 'Nuevo Puesto'"
+  [submitLabel]="editMode ? 'Actualizar' : 'Crear'"
+  (onClose)="closeCard()"
+  (onSubmit)="savePuestoTrabajo()">
+
+  <form [formGroup]="puestoTrabajoForm" (ngSubmit)="savePuestoTrabajo()" class="form-vertical">
+
+    <label>Nombre Puesto de Trabajo</label>
+    <input type="text" formControlName="nombre" />
+    <div class="error"
+         *ngIf="puestoTrabajoForm.get('nombre')?.touched && puestoTrabajoForm.get('nombre')?.invalid">
+      * Campo obligatorio
+    </div>
+
+    <label>Área</label>
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <input matInput 
+             placeholder="Seleccione un área" 
+             [formControl]="areaCtrl"
+             [matAutocomplete]="auto"
+             (focus)="openAutocomplete()">
+      <button matSuffix mat-icon-button *ngIf="areaCtrl.value" (click)="clearArea()" type="button">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+
+    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayArea.bind(this)">
+      <mat-option *ngFor="let area of filteredAreas | async" [value]="area">
+        {{ area.nombre }}
+      </mat-option>
+    </mat-autocomplete>
+
+    <div class="error"
+         *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
+      * Campo obligatorio
+    </div>
+  </form>
+</app-mantenimiento-modal>
+
+
+
+
+
+
+
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatAutocomplete } from '@angular/material/autocomplete';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
+import { Observable, map, startWith } from 'rxjs';
 import Swal from 'sweetalert2';
+
 import { SideBarComponent } from '../../../../shared/side-bar/side-bar';
 import { MantenimientoLayoutComponent } from '../../../../shared/mantenimiento-layout/mantenimiento-layout';
 import { MantenimientoModalComponent } from '../../../../shared/mantenimiento-modal/mantenimiento-modal';
 import { PuestosTrabajoService } from './services/puestos-trabajo.service';
 import { AreasService } from '../areas/services/areas.service';
-import { Observable, map, startWith } from 'rxjs';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatIconModule } from '@angular/material/icon';
 
 interface Area {
   id: string | number;
@@ -77,7 +148,6 @@ export class PuestosTrabajoComponent implements OnInit {
     // Sincronizar areaCtrl con areaId
     this.areaCtrl.valueChanges.subscribe(value => {
       if (value && typeof value !== 'string') {
-        // Si es un área seleccionada
         this.puestoTrabajoForm.get('areaId')?.setValue(value.id);
       } else {
         this.puestoTrabajoForm.get('areaId')?.setValue('');
@@ -85,7 +155,6 @@ export class PuestosTrabajoComponent implements OnInit {
     });
   }
 
-  // Mostrar nombre en el input
   displayArea(area: Area | string): string {
     if (!area) return '';
     return typeof area === 'string' ? area : area.nombre;
@@ -130,6 +199,16 @@ export class PuestosTrabajoComponent implements OnInit {
     }));
   }
 
+  loadPuestosTrabajo() {
+    this.puestosTrabajoService.getPuestosTrabajo().subscribe({
+      next: resp => {
+        this.puestosTrabajo = (resp as any).data ?? resp;
+        this.addAreaNombreToPuestos();
+      },
+      error: () => Swal.fire('Error', 'No se pudieron cargar los puestos', 'error')
+    });
+  }
+
   filteredPuestosTrabajo() {
     if (!this.puestosTrabajo) return [];
     const q = this.searchText?.toLowerCase() ?? '';
@@ -139,7 +218,6 @@ export class PuestosTrabajoComponent implements OnInit {
     );
   }
 
-  // Modal Crear
   openCreateCard() {
     this.editMode = false;
     this.currentId = null;
@@ -148,18 +226,14 @@ export class PuestosTrabajoComponent implements OnInit {
     this.showCard = true;
   }
 
-  // Modal Editar
   openEditCard(puestoTrabajo: any) {
     this.editMode = true;
     this.currentId = puestoTrabajo.id;
-
     const areaNombre = this.areaMap.get(Number(puestoTrabajo.areaId)) || '';
-
     this.puestoTrabajoForm.setValue({
       nombre: puestoTrabajo.nombre,
       areaId: puestoTrabajo.areaId
     });
-
     this.areaCtrl.setValue({ id: puestoTrabajo.areaId, nombre: areaNombre });
     this.showCard = true;
   }
@@ -226,3 +300,6 @@ export class PuestosTrabajoComponent implements OnInit {
     this.isSidebarCollapsed = state;
   }
 }
+
+
+
