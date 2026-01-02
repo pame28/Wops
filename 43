@@ -1,48 +1,3 @@
-<mat-form-field appearance="outline" class="w-100">
-  <mat-label>Área</mat-label>
-
-  <!-- Input con autocomplete -->
-  <input
-    matInput
-    [formControl]="areaCtrl"
-    [matAutocomplete]="auto"
-    (focus)="openAutocomplete()"
-    placeholder="Seleccione un área"
-  >
-
-  <!-- Botón "X" para limpiar -->
-  <button
-    *ngIf="areaCtrl.value"
-    matSuffix
-    mat-icon-button
-    aria-label="Clear"
-    (click)="clearArea()"
-  >
-    <mat-icon>close</mat-icon>
-  </button>
-
-  <!-- Autocomplete -->
-  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayArea">
-    <mat-option *ngFor="let area of filteredAreas | async" [value]="area">
-      {{ area.nombre }}
-    </mat-option>
-  </mat-autocomplete>
-
-  <!-- Mensaje de error -->
-  <mat-error *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
-    Campo obligatorio
-  </mat-error>
-</mat-form-field>
-
-
-
-
-
-
-
-
-
-
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -131,8 +86,9 @@ export class PuestosTrabajoComponent implements OnInit {
   }
 
   // Mostrar nombre en el input
-  displayArea(area: Area): string {
-    return area ? area.nombre : '';
+  displayArea(area: Area | string): string {
+    if (!area) return '';
+    return typeof area === 'string' ? area : area.nombre;
   }
 
   loadAreas() {
@@ -146,8 +102,8 @@ export class PuestosTrabajoComponent implements OnInit {
         this.filteredAreas = this.areaCtrl.valueChanges.pipe(
           startWith(''),
           map(value => {
-            const name = typeof value === 'string' ? value : value?.nombre;
-            return this.areas.filter(area => area.nombre.toLowerCase().includes(name?.toLowerCase() ?? ''));
+            const name = typeof value === 'string' ? value : (value && (value as Area).nombre) ? (value as Area).nombre : '';
+            return this.areas.filter(area => area.nombre.toLowerCase().includes(name.toLowerCase()));
           })
         );
       },
@@ -156,7 +112,7 @@ export class PuestosTrabajoComponent implements OnInit {
   }
 
   openAutocomplete() {
-    if (this.matAuto && !this.matAuto.panelOpen) {
+    if (this.matAuto && !this.matAuto.isOpen) {
       this.matAuto.openPanel();
     }
   }
