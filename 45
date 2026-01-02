@@ -1,4 +1,55 @@
 
+<mat-autocomplete
+  #auto="matAutocomplete"
+  panelClass="areas-autocomplete-panel"
+>
+  <mat-option
+    *ngFor="let area of filteredAreas | async"
+    [value]="area.nombre"
+  >
+    {{ area.nombre }}
+  </mat-option>
+</mat-autocomplete>
+
+
+
+
+
+/* Hover */
+.areas-autocomplete-panel .mat-mdc-option:hover {
+  background-color: #e3f2fd !important;
+}
+
+/* Opción activa (teclado o mouse) */
+.areas-autocomplete-panel .mat-mdc-option.mdc-list-item--activated {
+  background-color: #bbdefb !important;
+}
+
+/* Texto */
+.areas-autocomplete-panel .mat-mdc-option {
+  transition: background-color 0.2s ease;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Hover de opciones (Angular Material MDC) */
 .mat-mdc-autocomplete-panel {
