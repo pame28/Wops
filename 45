@@ -1,3 +1,41 @@
+
+/* PANEL del autocomplete */
+.mat-mdc-autocomplete-panel
+  .mat-mdc-option
+  .mdc-list-item__ripple::before {
+  background-color: #e3f2fd !important; /* azul */
+  opacity: 1 !important;
+}
+
+/* Hover */
+.mat-mdc-autocomplete-panel
+  .mat-mdc-option:hover
+  .mdc-list-item__ripple::before {
+  background-color: #e3f2fd !important;
+  opacity: 1 !important;
+}
+
+/* Activo (teclado) */
+.mat-mdc-autocomplete-panel
+  .mat-mdc-option.mdc-list-item--activated
+  .mdc-list-item__ripple::before {
+  background-color: #bbdefb !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .area-wrapper {
   position: relative;
   width: 100%;
