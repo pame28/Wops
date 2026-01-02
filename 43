@@ -1,0 +1,272 @@
+<mat-form-field appearance="outline" class="w-100">
+  <mat-label>Área</mat-label>
+
+  <!-- Input con autocomplete -->
+  <input
+    matInput
+    [formControl]="areaCtrl"
+    [matAutocomplete]="auto"
+    (focus)="openAutocomplete()"
+    placeholder="Seleccione un área"
+  >
+
+  <!-- Botón "X" para limpiar -->
+  <button
+    *ngIf="areaCtrl.value"
+    matSuffix
+    mat-icon-button
+    aria-label="Clear"
+    (click)="clearArea()"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  <!-- Autocomplete -->
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayArea">
+    <mat-option *ngFor="let area of filteredAreas | async" [value]="area">
+      {{ area.nombre }}
+    </mat-option>
+  </mat-autocomplete>
+
+  <!-- Mensaje de error -->
+  <mat-error *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
+    Campo obligatorio
+  </mat-error>
+</mat-form-field>
+
+
+
+
+
+
+
+
+
+
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { MatAutocomplete } from '@angular/material/autocomplete';
+import Swal from 'sweetalert2';
+import { SideBarComponent } from '../../../../shared/side-bar/side-bar';
+import { MantenimientoLayoutComponent } from '../../../../shared/mantenimiento-layout/mantenimiento-layout';
+import { MantenimientoModalComponent } from '../../../../shared/mantenimiento-modal/mantenimiento-modal';
+import { PuestosTrabajoService } from './services/puestos-trabajo.service';
+import { AreasService } from '../areas/services/areas.service';
+import { Observable, map, startWith } from 'rxjs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatIconModule } from '@angular/material/icon';
+
+interface Area {
+  id: string | number;
+  nombre: string;
+}
+
+@Component({
+  selector: 'app-puestos-trabajo',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    SideBarComponent,
+    MantenimientoLayoutComponent,
+    MantenimientoModalComponent,
+    MatFormFieldModule,
+    MatInputModule,
+    MatAutocompleteModule,
+    MatIconModule
+  ],
+  templateUrl: './puestos-trabajo.component.html',
+  styleUrls: ['./puestos-trabajo.component.css'],
+})
+export class PuestosTrabajoComponent implements OnInit {
+
+  @ViewChild('auto') matAuto!: MatAutocomplete;
+
+  puestosTrabajo: any[] = [];
+  searchText: string = '';
+  puestoTrabajoForm!: FormGroup;
+  showCard = false;
+  editMode = false;
+  currentId: string | null = null;
+  isSidebarCollapsed = false;
+
+  areaCtrl = this.fb.control('', Validators.required);
+  areas: Area[] = [];
+  areaMap = new Map<number, string>();
+  filteredAreas!: Observable<Area[]>;
+
+  columns = [
+    { field: 'id', header: 'ID' },
+    { field: 'nombre', header: 'Nombre' },
+    { field: 'areaNombre', header: 'Área' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    private puestosTrabajoService: PuestosTrabajoService,
+    private areasService: AreasService
+  ) {}
+
+  ngOnInit(): void {
+    this.puestoTrabajoForm = this.fb.group({
+      nombre: ['', Validators.required],
+      areaId: ['', Validators.required]
+    });
+
+    this.loadAreas();
+    this.loadPuestosTrabajo();
+
+    // Sincronizar areaCtrl con areaId
+    this.areaCtrl.valueChanges.subscribe(value => {
+      if (value && typeof value !== 'string') {
+        // Si es un área seleccionada
+        this.puestoTrabajoForm.get('areaId')?.setValue(value.id);
+      } else {
+        this.puestoTrabajoForm.get('areaId')?.setValue('');
+      }
+    });
+  }
+
+  // Mostrar nombre en el input
+  displayArea(area: Area): string {
+    return area ? area.nombre : '';
+  }
+
+  loadAreas() {
+    this.areasService.getAreas().subscribe({
+      next: resp => {
+        this.areas = (resp as any).data ?? resp;
+        this.areaMap.clear();
+        this.areas.forEach(a => this.areaMap.set(Number(a.id), a.nombre));
+        this.addAreaNombreToPuestos();
+
+        this.filteredAreas = this.areaCtrl.valueChanges.pipe(
+          startWith(''),
+          map(value => {
+            const name = typeof value === 'string' ? value : value?.nombre;
+            return this.areas.filter(area => area.nombre.toLowerCase().includes(name?.toLowerCase() ?? ''));
+          })
+        );
+      },
+      error: () => Swal.fire('Error', 'No se pudieron cargar las áreas', 'error')
+    });
+  }
+
+  openAutocomplete() {
+    if (this.matAuto && !this.matAuto.panelOpen) {
+      this.matAuto.openPanel();
+    }
+  }
+
+  clearArea() {
+    this.areaCtrl.setValue('');
+    this.puestoTrabajoForm.get('areaId')?.setValue('');
+  }
+
+  private addAreaNombreToPuestos() {
+    if (!this.puestosTrabajo?.length || this.areaMap.size === 0) return;
+    this.puestosTrabajo = this.puestosTrabajo.map(p => ({
+      ...p,
+      areaNombre: this.areaMap.get(Number(p.areaId)) ?? `ID ${p.areaId}`
+    }));
+  }
+
+  filteredPuestosTrabajo() {
+    if (!this.puestosTrabajo) return [];
+    const q = this.searchText?.toLowerCase() ?? '';
+    return this.puestosTrabajo.filter(p =>
+      (p.nombre ?? '').toLowerCase().includes(q) ||
+      (p.areaNombre ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  // Modal Crear
+  openCreateCard() {
+    this.editMode = false;
+    this.currentId = null;
+    this.puestoTrabajoForm.reset({ nombre: '', areaId: '' });
+    this.areaCtrl.setValue('');
+    this.showCard = true;
+  }
+
+  // Modal Editar
+  openEditCard(puestoTrabajo: any) {
+    this.editMode = true;
+    this.currentId = puestoTrabajo.id;
+
+    const areaNombre = this.areaMap.get(Number(puestoTrabajo.areaId)) || '';
+
+    this.puestoTrabajoForm.setValue({
+      nombre: puestoTrabajo.nombre,
+      areaId: puestoTrabajo.areaId
+    });
+
+    this.areaCtrl.setValue({ id: puestoTrabajo.areaId, nombre: areaNombre });
+    this.showCard = true;
+  }
+
+  closeCard() {
+    this.showCard = false;
+  }
+
+  savePuestoTrabajo() {
+    if (this.puestoTrabajoForm.invalid) {
+      this.puestoTrabajoForm.markAllAsTouched();
+      return;
+    }
+
+    const body = this.puestoTrabajoForm.value;
+    let request$;
+
+    if (this.editMode && this.currentId) {
+      request$ = this.puestosTrabajoService.actualizarPuestoTrabajo(this.currentId, {
+        id: this.currentId,
+        nombre: body.nombre,
+        areaId: body.areaId
+      });
+    } else {
+      request$ = this.puestosTrabajoService.crearPuestoTrabajo(body);
+    }
+
+    request$.subscribe({
+      next: () => {
+        Swal.fire(
+          'Éxito',
+          this.editMode ? 'Puesto de Trabajo actualizado' : 'Puesto de Trabajo creado',
+          'success'
+        );
+        this.loadPuestosTrabajo();
+        this.closeCard();
+      },
+      error: (err) => {
+        console.error(err);
+        Swal.fire('Error', 'No se pudo guardar', 'error');
+      }
+    });
+  }
+
+  deletePuestoTrabajo(id: string) {
+    Swal.fire({
+      title: '¿Eliminar Puesto de Trabajo?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.puestosTrabajoService.eliminarPuestoTrabajo(id).subscribe({
+          next: () => {
+            Swal.fire('Eliminado', 'Puesto eliminado', 'success');
+            this.loadPuestosTrabajo();
+          }
+        });
+      }
+    });
+  }
+
+  onSidebarToggled(state: boolean) {
+    this.isSidebarCollapsed = state;
+  }
+}
