@@ -1,91 +1,96 @@
-.card-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.modal-card {
-  width: 500px;
-  padding: 50px;
-  border-radius: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,.3);
-  background: white;
-  position: relative;
-}
-
-.close-card {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 40px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: red;
-  font-weight: bolder;
-}
-
-.titulo-modal {
-  color: #003865;
-  font-family: "Boogaloo", sans-serif;
-  text-align: center;
-}
-
-:host ::ng-deep label {
-  font-weight: 600;
-  color: var(--bp-blue-experto);
-  display: block;
-  margin-top: 15px;
-}
-
-:host ::ng-deep input {
+/* Mat-form-field similar a tus inputs */
+:host ::ng-deep .mat-form-field-appearance-outline {
   width: 100%;
-  margin-top: 8px;
-  padding: 8px;
   border-radius: 8px;
   border: 1px solid var(--bp-blue-experto);
+  box-shadow: none;
+  padding: 0;
 }
 
-:host ::ng-deep input:focus {
+/* Focus con shadow */
+:host ::ng-deep .mat-form-field-appearance-outline.mat-focused {
   border-color: var(--bp-aqua-digital);
-  outline: none;
   box-shadow: 0 0 0 2px var(--bp-aqua-digital);
 }
 
-
-
-:host ::ng-deep .error {
-  color: red;
-  font-size: 0.9rem;
-  margin-top: 6px;
+/* Hover del mat-select */
+:host ::ng-deep .mat-select:hover .mat-select-trigger {
+  background-color: #f0f8ff; /* azul muy suave */
+  cursor: pointer;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 40px;
-}
-
-.btn-crear {
-  background: #00C1D4;
+/* Opciones: hover azul */
+:host ::ng-deep .mat-mdc-option:hover {
+  background-color: #007bff;
   color: white;
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: none;
-  width: 150px;
-  font-weight: bolder;
 }
 
-.btn-outline {
-  border: 1px solid #ccc;
-  background: transparent;
-  padding: 6px 14px;
-  border-radius: 8px;
-  width: 150px;
-  font-weight: bolder;
+/* Opciones: tamaño y scroll */
+:host ::ng-deep .mat-mdc-select-panel {
+  max-height: 250px; /* limita altura y evita scroll si hay pocas opciones */
+  font-size: 14px;
+}
+
+
+
+
+
+
+
+
+<mat-form-field appearance="outline" class="w-100">
+  <mat-label>Área</mat-label>
+  <input type="text" placeholder="Seleccione un área" aria-label="Área" matInput 
+         [formControl]="areaCtrl" [matAutocomplete]="auto">
+
+  <mat-autocomplete #auto="matAutocomplete">
+    <mat-option *ngFor="let area of filteredAreas | async" [value]="area.nombre">
+      {{ area.nombre }}
+    </mat-option>
+  </mat-autocomplete>
+
+  <mat-error *ngIf="puestoTrabajoForm.get('areaId')?.touched && puestoTrabajoForm.get('areaId')?.invalid">
+    Campo obligatorio
+  </mat-error>
+</mat-form-field>
+
+
+
+
+import { Component } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { Observable, map, startWith } from 'rxjs';
+
+@Component({
+  selector: 'app-puesto-trabajo',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatAutocompleteModule
+  ],
+  templateUrl: './puesto-trabajo.component.html'
+})
+export class PuestoTrabajoComponent {
+  areaCtrl = new FormControl('');
+  areas = [
+    { id: 1, nombre: 'Área 1' },
+    { id: 2, nombre: 'Área 2' },
+    { id: 3, nombre: 'Área 3' }
+  ];
+
+  filteredAreas: Observable<any[]>;
+
+  constructor() {
+    this.filteredAreas = this.areaCtrl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filter(value))
+    );
+  }
+
+  private _filter(value: string): any[] {
+    const filterValue = value.toLowerCase();
+    return this.areas.filter(area => area.nombre.toLowerCase().includes(filterValue));
+  }
 }
