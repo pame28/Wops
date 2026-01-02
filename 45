@@ -1,3 +1,53 @@
+.area-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.area-input {
+  width: 100%;
+  padding-right: 36px; /* espacio para la X */
+}
+
+/* Botón X dentro del input */
+.clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  min-width: auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  z-index: 5;
+}
+
+/* Quitar cualquier estilo de botón Material */
+.clear-btn.mat-mdc-icon-button {
+  --mdc-icon-button-state-layer-size: 24px;
+}
+
+/* Icono */
+.clear-btn mat-icon {
+  font-size: 18px;
+  color: #666;
+}
+
+/* Hover suave */
+.clear-btn:hover mat-icon {
+  color: #d32f2f;
+}
+
+
+
+
+
+
+
+
+
+
 <label>Área</label>
 
 <div class="area-wrapper">
