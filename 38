@@ -1,3 +1,10 @@
+@use rules must be written before any other rules.
+   ╷
+42 │ @use '@angular/material' as mat;
+   │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ╵
+  src\custom-theme.scss 42:1  root stylesheet
+angular:styles/global:styles:1:8
 
 
 
