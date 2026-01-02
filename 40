@@ -1,0 +1,91 @@
+.card-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal-card {
+  width: 500px;
+  padding: 50px;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.3);
+  background: white;
+  position: relative;
+}
+
+.close-card {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: red;
+  font-weight: bolder;
+}
+
+.titulo-modal {
+  color: #003865;
+  font-family: "Boogaloo", sans-serif;
+  text-align: center;
+}
+
+:host ::ng-deep label {
+  font-weight: 600;
+  color: var(--bp-blue-experto);
+  display: block;
+  margin-top: 15px;
+}
+
+:host ::ng-deep input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid var(--bp-blue-experto);
+}
+
+:host ::ng-deep input:focus {
+  border-color: var(--bp-aqua-digital);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bp-aqua-digital);
+}
+
+
+
+:host ::ng-deep .error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 40px;
+}
+
+.btn-crear {
+  background: #00C1D4;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  width: 150px;
+  font-weight: bolder;
+}
+
+.btn-outline {
+  border: 1px solid #ccc;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 8px;
+  width: 150px;
+  font-weight: bolder;
+}
