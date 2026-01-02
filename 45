@@ -1,4 +1,29 @@
 
+
+/* Hover de opciones (Angular Material MDC) */
+.mat-mdc-autocomplete-panel {
+  --mdc-list-item-hover-state-layer-color: #e3f2fd;
+  --mdc-list-item-focus-state-layer-color: #bbdefb;
+  --mdc-list-item-selected-state-layer-color: #90caf9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* PANEL del autocomplete */
 .mat-mdc-autocomplete-panel
   .mat-mdc-option
